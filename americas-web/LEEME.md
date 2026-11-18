@@ -32,6 +32,7 @@ Hacelo desde la compu: tarda unos 20 minutos.
    - `DATABASE_URL` = el link de Neon del paso 1.
    - `ADMIN_PASSWORD` = la contraseña para entrar al panel de la web (inventala).
    - `CAJA_KEY` = una clave larga para la caja (por ejemplo, 30 letras y números al azar). Guardala: la vas a pegar en la caja.
+   - **Si algún día cambiás una de estas claves, hay que volver a publicar la web** (si no, sigue usando la vieja). La misma `CAJA_KEY` va en la caja: Apps Script → ⚙️ Configuración del proyecto → Propiedades de la secuencia de comandos → `CAJA_KEY`.
 4. **Deploy**. En 2 o 3 minutos te da un link tipo `https://americas-web.netlify.app`.
 
 ## 4. Conectar la caja
