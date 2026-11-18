@@ -7,7 +7,7 @@ import { plata, precioUnit, pctOferta, maxEscalon, pagoMax } from '@/lib/precios
 
 export function Foto({ p, cls = 'ph', children }) {
   const [mal, setMal] = useState(false);
-  if (!p.img || mal) return <div className={cls + ' nofoto'}><div className="ini"><Ic n={iconoCat(p.categoria)} /><b>{iniciales(p.nombre)}</b></div>{children}</div>;
+  if (!p.img || mal) return <div className={cls + ' nofoto'}><div className="ini"><Ic n={iconoCat(p.categoria + ' ' + p.nombre)} /><b>{p.categoria}</b></div>{children}</div>;
   return <div className={cls}><img src={p.img} alt={p.nombre} loading="lazy" referrerPolicy="no-referrer" onError={() => setMal(true)} />{children}</div>;
 }
 
@@ -16,7 +16,7 @@ export default function Tarjeta({ p }) {
   const c = carrito[p.id]?.c || 0, pct = pctOferta(p), md = maxEscalon(p), mp = pagoMax(cfg.descPagoMap);
   const url = '/producto/' + p.slug;
   let boton;
-  if (p.unidad === 'kg') boton = <Link className={'add' + (c ? ' sel' : p.hay ? '' : ' enc')} href={url}><Ic n={c ? 'check' : 'plus'} cl="s" />{c ? (c >= 1 ? String(c).replace('.', ',') + ' kg' : Math.round(c * 1000) + ' g') : p.hay ? 'Elegir cantidad' : 'Encargar'}</Link>;
+  if (p.unidad === 'kg') boton = <Link className={'add' + (c ? ' sel' : p.hay ? '' : ' enc')} href={url}><Ic n={c ? 'check' : 'plus'} cl="s" />{c ? (c >= 1 ? String(c).replace('.', ',') + ' kg' : Math.round(c * 1000) + ' g') : p.hay ? 'Elegir peso' : 'Encargar'}</Link>;
   else if (c) boton = <div className="step"><button onClick={() => sumar(p, -1)} aria-label="Sacar uno">−</button><span>{c}</span><button onClick={() => sumar(p, 1)} aria-label="Agregar uno">+</button></div>;
   else boton = <button className={'add' + (p.hay ? '' : ' enc')} onClick={() => sumar(p, 1)}><Ic n="plus" cl="s" />{p.hay ? 'Agregar' : 'Encargar'}</button>;
   return (

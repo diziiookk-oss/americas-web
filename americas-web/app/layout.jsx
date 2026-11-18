@@ -12,8 +12,8 @@ export async function generateMetadata() {
     title: { default: `${c.negocio} · Drugstore en ${c.ciudad || 'Paraná'} · Pedí online`, template: `%s | ${c.negocio}` },
     description: desc,
     keywords: ['américas drugstore', 'americas drugstore', 'drugstore paraná', 'kiosco paraná', 'dietética paraná', 'delivery paraná', 'av de las américas'],
-    openGraph: { type: 'website', locale: 'es_AR', siteName: c.negocio, title: c.negocio, description: desc, images: ['/og.png'] },
-    twitter: { card: 'summary_large_image', images: ['/og.png'] },
+    openGraph: { type: 'website', locale: 'es_AR', siteName: c.negocio, title: c.negocio, description: desc },
+    twitter: { card: 'summary_large_image' },
     alternates: { canonical: '/' },
     icons: { icon: '/icon.svg', apple: '/apple-icon.png' },
     formatDetection: { telephone: false }

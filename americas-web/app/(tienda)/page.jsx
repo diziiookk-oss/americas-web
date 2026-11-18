@@ -32,15 +32,15 @@ export default async function Inicio() {
   return (<>
     <Portada slides={slides} />
     <div className="benef">{B.map((b, i) => <div className="bf" key={i}><div className="ic"><Ic n={b[0]} /></div><div><b>{b[1]}</b><span>{b[2]}</span></div></div>)}</div>
+    {of.length > 0 && <><div className="sec"><h3>Ofertas 🔥<small>Precios especiales comprando online</small></h3><Link href="/ofertas">Ver todas <Ic n="arrow" cl="s" /></Link></div>
+      <div className="fila">{of.map((p) => <Tarjeta key={p.id} p={paraCliente(p)} />)}</div></>}
     <div className="sec"><h2 className="h1pag">Categorías<small style={{ display: 'block', font: '600 12.5px/1.3 Inter', color: 'var(--mute)', textTransform: 'none', letterSpacing: 0, marginTop: 4 }}>Elegí y encontrá todo más rápido</small></h2><Link href="/productos">Ver todo <Ic n="arrow" cl="s" /></Link></div>
     <div className="cats">
-      <Link className="cat hot" href="/ofertas"><div className="ic"><Ic n="star" /></div><div className="big"><Ic n="star" /></div><b>Ofertas</b><span>{nOf ? nOf + ' productos' : 'Ver todas'}</span></Link>
-      {cats.map((k) => <Link key={k.slug} className="cat" href={'/categoria/' + k.slug}><div className="ic"><Ic n={iconoCat(k.nombre)} /></div><div className="big"><Ic n={iconoCat(k.nombre)} /></div><b>{k.nombre}</b><span>{k.n} productos</span></Link>)}
+      <Link className="cat hot" href="/ofertas"><div className="ic"><Ic n="star" /></div><b>Ofertas</b><span>{nOf ? nOf + ' productos' : 'Ver todas'}</span></Link>
+      {cats.map((k) => <Link key={k.slug} className="cat" href={'/categoria/' + k.slug}><div className="ic"><Ic n={iconoCat(k.nombre)} /></div><b>{k.nombre}</b><span>{k.n} productos</span></Link>)}
     </div>
     {top.length > 0 && <><div className="sec"><h3>Los más elegidos ⭐<small>Lo que más se lleva la gente del barrio</small></h3><Link href="/productos">Ver más <Ic n="arrow" cl="s" /></Link></div>
       <div className="fila">{top.map((p) => <Tarjeta key={p.id} p={paraCliente(p)} />)}</div></>}
-    {of.length > 0 && <><div className="sec"><h3>Ofertas 🔥<small>Precios especiales comprando online</small></h3><Link href="/ofertas">Ver todas <Ic n="arrow" cl="s" /></Link></div>
-      <div className="fila">{of.map((p) => <Tarjeta key={p.id} p={paraCliente(p)} />)}</div></>}
     <RuletaCTA />
   </>);
 }
