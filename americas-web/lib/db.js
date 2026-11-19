@@ -48,6 +48,16 @@ CREATE TABLE IF NOT EXISTS avisos (
   id serial PRIMARY KEY, fecha timestamptz DEFAULT now(), producto text, cliente text, telefono text, estado text DEFAULT 'Pendiente'
 );
 ALTER TABLE productos ADD COLUMN IF NOT EXISTS etiqueta text DEFAULT '';
+ALTER TABLE productos ADD COLUMN IF NOT EXISTS costo numeric;
+CREATE TABLE IF NOT EXISTS vendedores (
+  codigo text PRIMARY KEY, nombre text NOT NULL, telefono text DEFAULT '', activo boolean DEFAULT true, creado timestamptz DEFAULT now()
+);
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS vendedor text DEFAULT '';
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS ganancia numeric DEFAULT 0;
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS comision numeric DEFAULT 0;
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS sin_costo int DEFAULT 0;
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS comision_pagada timestamptz;
+CREATE INDEX IF NOT EXISTS pedidos_vendedor ON pedidos (vendedor);
 `;
 
 const PREMIOS_DEF = [

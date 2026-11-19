@@ -2,7 +2,7 @@
 import crypto from 'crypto';
 import { db } from './db';
 import { CONFIG_DEF, getConfig, olvidar } from './datos';
-import { slugify, parseEscalones } from './precios';
+import { slugify, parseEscalones, plata } from './precios';
 
 /* ------------------------------------------------------------------ acceso */
 function firma(txt) { return crypto.createHmac('sha256', String(process.env.ADMIN_PASSWORD || '') + '|ad').update(txt).digest('hex'); }
@@ -43,13 +43,15 @@ export async function sincronizar(body) {
     filas.push({ id, slug, nombre, marca: String(x.marca || '').slice(0, 80), categoria: String(x.categoria || '').trim().slice(0, 60) || 'Otros',
       unidad: x.unidad === 'kg' ? 'kg' : 'un', precio, oferta: of > 0 && of < precio ? of : null, escalones: JSON.stringify(esc),
       img: /^https?:\/\//.test(String(x.img || '')) ? String(x.img).slice(0, 500) : '', stock: x.stock === '' || x.stock === null || x.stock === undefined || isNaN(Number(x.stock)) ? null : Number(x.stock),
-      pop: Math.max(0, Math.round(Number(x.pop) || 0)), activo: x.tienda !== false });
+      pop: Math.max(0, Math.round(Number(x.pop) || 0)), activo: x.tienda !== false,
+      costo: Number(x.costo) > 0 ? Number(x.costo) : null });   // costo: solo para calcular comisiones; nunca se muestra
   }
   for (let i = 0; i < filas.length; i += 300) {
     const t = filas.slice(i, i + 300);
-    await s`INSERT INTO productos ${s(t, 'id', 'slug', 'nombre', 'marca', 'categoria', 'unidad', 'precio', 'oferta', 'escalones', 'img', 'stock', 'pop', 'activo')}
+    await s`INSERT INTO productos ${s(t, 'id', 'slug', 'nombre', 'marca', 'categoria', 'unidad', 'precio', 'oferta', 'escalones', 'img', 'stock', 'pop', 'activo', 'costo')}
       ON CONFLICT (id) DO UPDATE SET nombre = excluded.nombre, marca = excluded.marca, categoria = excluded.categoria, unidad = excluded.unidad, precio = excluded.precio,
-      oferta = excluded.oferta, escalones = excluded.escalones::jsonb, img = excluded.img, stock = excluded.stock, pop = excluded.pop, activo = excluded.activo, actualizado = now()`;
+      oferta = excluded.oferta, escalones = excluded.escalones::jsonb, img = excluded.img, stock = excluded.stock, pop = excluded.pop, activo = excluded.activo,
+      costo = coalesce(excluded.costo, productos.costo), actualizado = now()`;
   }
   // los que ya no están en la caja dejan de mostrarse (no se borran)
   const [{ n: bajas }] = await s`WITH b AS (UPDATE productos SET activo = false, actualizado = now() WHERE activo AND NOT (id = ANY(${[...ids]})) RETURNING 1) SELECT count(*)::int AS n FROM b`;
@@ -65,7 +67,57 @@ export const ESTADOS = ['Nuevo', 'Preparando', 'Listo', 'En camino', 'Entregado'
 function pedidoJSON(r) {
   return { nro: r.nro, fecha: new Date(r.fecha).getTime(), cliente: r.cliente, tel: r.telefono, entrega: r.entrega, dir: r.direccion, pago: r.pago, items: r.items || [],
     detalle: r.detalle, subtotal: Number(r.subtotal), descPremio: Number(r.desc_premio), descPago: Number(r.desc_pago), descuento: Number(r.desc_premio) + Number(r.desc_pago),
-    envio: Number(r.envio), total: Number(r.total), premio: r.premio, estado: r.estado, nota: r.nota, ticket: r.ticket, cobrado: r.cobrado_en_caja };
+    envio: Number(r.envio), total: Number(r.total), premio: r.premio, estado: r.estado, nota: r.nota, ticket: r.ticket, cobrado: r.cobrado_en_caja,
+    vendedor: r.vendedor || '', ganancia: Number(r.ganancia) || 0, comision: Number(r.comision) || 0, comisionPagada: r.comision_pagada ? new Date(r.comision_pagada).getTime() : null };
+}
+
+/* ------------------------------------------------------------------ revendedores */
+// La comisión se paga solo por pedidos ENTREGADOS. "Pagar" marca como pagados todos los entregados pendientes de ese revendedor.
+export function codigoDe(nombre) {
+  return String(nombre || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 16);
+}
+export async function listarVendedores() {
+  const s = await db();
+  const rows = await s`SELECT v.codigo, v.nombre, v.telefono, v.activo, v.creado,
+      count(p.num) FILTER (WHERE p.estado <> 'Cancelado')::int AS pedidos,
+      count(p.num) FILTER (WHERE p.estado = 'Entregado')::int AS entregados,
+      coalesce(sum(p.total) FILTER (WHERE p.estado = 'Entregado'), 0) AS vendido,
+      coalesce(sum(p.comision) FILTER (WHERE p.estado = 'Entregado' AND p.comision_pagada IS NULL), 0) AS pendiente,
+      coalesce(sum(p.comision) FILTER (WHERE p.estado NOT IN ('Entregado', 'Cancelado')), 0) AS en_curso,
+      coalesce(sum(p.comision) FILTER (WHERE p.comision_pagada IS NOT NULL), 0) AS pagado,
+      coalesce(sum(p.comision) FILTER (WHERE p.estado = 'Entregado' AND p.fecha > now() - interval '7 days'), 0) AS semana,
+      coalesce(sum(p.sin_costo) FILTER (WHERE p.estado <> 'Cancelado'), 0)::int AS sin_costo
+    FROM vendedores v LEFT JOIN pedidos p ON p.vendedor = v.codigo AND p.nro IS NOT NULL
+    GROUP BY v.codigo ORDER BY v.activo DESC, pendiente DESC, v.nombre`;
+  const cfg = await getConfig();
+  return { vendedores: rows.map((r) => ({ ...r, creado: new Date(r.creado).getTime(), vendido: Number(r.vendido), pendiente: Number(r.pendiente), enCurso: Number(r.en_curso), pagado: Number(r.pagado), semana: Number(r.semana), sinCosto: r.sin_costo })),
+    pct: Number(cfg.comisionPct) || 0 };
+}
+export async function guardarVendedor({ codigo, nombre, telefono, activo }) {
+  const s = await db();
+  const n = String(nombre || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+  if (n.length < 2) return { ok: false, msg: 'Escribí el nombre del revendedor.' };
+  const tel = String(telefono || '').replace(/\D/g, '').slice(0, 15);
+  if (codigo) {
+    await s`UPDATE vendedores SET nombre = ${n}, telefono = ${tel}, activo = ${activo !== false} WHERE codigo = ${codigo}`;
+    return { ok: true, msg: 'Revendedor guardado.', ...(await listarVendedores()) };
+  }
+  const base = codigoDe(n) || 'rev';
+  let c = base, k = 2;
+  while ((await s`SELECT 1 FROM vendedores WHERE codigo = ${c}`).length) c = base + k++;
+  await s`INSERT INTO vendedores (codigo, nombre, telefono) VALUES (${c}, ${n}, ${tel})`;
+  return { ok: true, msg: 'Listo: el código de ' + n + ' es "' + c + '".', codigo: c, ...(await listarVendedores()) };
+}
+export async function pagarVendedor({ codigo }) {
+  const s = await db();
+  const r = await s`UPDATE pedidos SET comision_pagada = now() WHERE vendedor = ${codigo} AND estado = 'Entregado' AND comision_pagada IS NULL RETURNING comision`;
+  const total = r.reduce((a, x) => a + Number(x.comision || 0), 0);
+  return { ok: true, msg: r.length ? 'Marcado como pagado: ' + plata(total) + ' (' + r.length + ' pedido' + (r.length > 1 ? 's' : '') + ').' : 'No tenía nada pendiente.', pagado: total, ...(await listarVendedores()) };
+}
+export async function pedidosVendedor({ codigo }) {
+  const s = await db();
+  const rows = await s`SELECT * FROM pedidos WHERE vendedor = ${codigo} AND nro IS NOT NULL ORDER BY num DESC LIMIT 60`;
+  return { pedidos: rows.map(pedidoJSON) };
 }
 export async function listarPedidos(lim = 150) {
   const s = await db();

@@ -95,8 +95,23 @@ export async function crearPedido(ped) {
   const nota = corto(ped.nota, 300);
   const premioTxt = premio ? premio.texto + (premio.categoria ? ' en ' + premio.categoria : '') + ' (' + giro.codigo + ')' : '';
 
-  const [row] = await s`INSERT INTO pedidos (cliente, telefono, entrega, direccion, pago, items, detalle, subtotal, desc_premio, desc_pago, envio, total, premio, nota)
-    VALUES (${nombre}, ${tel}, ${envio ? 'Envío' : 'Retiro'}, ${envio ? dir : ''}, ${pago}, ${s.json(items)}, ${detalle}, ${C.sub}, ${C.dPremio}, ${C.dPago}, ${C.envio}, ${C.total}, ${premioTxt}, ${nota})
+  // Revendedor: si el cliente llegó con ?ref=codigo, el pedido es suyo. Comisión = % de la GANANCIA (precio cobrado − costo),
+  // descontando los descuentos que se le hicieron al cliente. Productos sin costo cargado no suman ganancia (se avisa en el panel).
+  let vendedor = '', ganancia = 0, comision = 0, sinCosto = 0;
+  const ref = String(ped.ref || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
+  if (ref) {
+    const [v] = await s`SELECT codigo FROM vendedores WHERE codigo = ${ref} AND activo`;
+    if (v) {
+      vendedor = v.codigo;
+      const costos = {}; (await s`SELECT id, costo FROM productos WHERE id = ANY(${lineas.map((l) => l.p.id)})`).forEach((r) => { costos[r.id] = r.costo === null ? null : Number(r.costo); });
+      lineas.forEach((l) => { const co = costos[l.p.id]; if (!(co > 0)) { sinCosto++; return; } ganancia += l.pr.total - co * l.c; });
+      ganancia = Math.max(0, Math.round(ganancia - C.dPremio - C.dPago));
+      comision = Math.round(ganancia * (Number(cfg.comisionPct) || 0) / 100);
+    }
+  }
+
+  const [row] = await s`INSERT INTO pedidos (cliente, telefono, entrega, direccion, pago, items, detalle, subtotal, desc_premio, desc_pago, envio, total, premio, nota, vendedor, ganancia, comision, sin_costo)
+    VALUES (${nombre}, ${tel}, ${envio ? 'Envío' : 'Retiro'}, ${envio ? dir : ''}, ${pago}, ${s.json(items)}, ${detalle}, ${C.sub}, ${C.dPremio}, ${C.dPago}, ${C.envio}, ${C.total}, ${premioTxt}, ${nota}, ${vendedor}, ${ganancia}, ${comision}, ${sinCosto})
     RETURNING num`;
   const nro = 'P-' + String(row.num).padStart(4, '0');
   await s`UPDATE pedidos SET nro = ${nro} WHERE num = ${row.num}`;
@@ -112,7 +127,7 @@ export async function crearPedido(ped) {
     '*Total: ' + plata(C.total) + '*\n\n' +
     '👤 ' + nombre + '\n' + (envio ? '🛵 Envío a: ' + dir : '🏪 Retiro en el local') + '\n💳 Pago: ' + pago + (nota ? '\n📝 ' + nota : '') +
     (encargos ? '\n⏳ Tiene ' + encargos + ' producto(s) para encargar' : '');
-  avisarDueno(cfg, msg).catch(() => {});
+  avisarDueno(cfg, vendedor ? msg + '\n🤝 Revendedor: ' + vendedor + ' · comisión ' + plata(comision) : msg).catch(() => {});
   return { ok: true, nro, total: C.total, wa: cfg.whatsappWA ? 'https://wa.me/' + telWA(cfg.whatsappWA) + '?text=' + encodeURIComponent(msg) : '', alias: /transf|mercado/i.test(pago) ? cfg.alias : '' };
 }
 

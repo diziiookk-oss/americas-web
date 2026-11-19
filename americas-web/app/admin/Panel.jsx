@@ -19,7 +19,7 @@ export default function Panel() {
   useEffect(() => { A('pedidos').then((r) => setLog(!!r.ok)); const h = () => setLog(false); window.addEventListener('ad-login', h); return () => window.removeEventListener('ad-login', h); }, []);
   if (log === null) return <div className="vacio">Cargando…</div>;
   if (!log) return <Login onOk={() => setLog(true)} />;
-  const T = [['pedidos', 'receipt', 'Pedidos'], ['estadisticas', 'grid', 'Estadísticas'], ['productos', 'bag', 'Productos'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos'], ['config', 'shop', 'Ajustes']];
+  const T = [['pedidos', 'receipt', 'Pedidos'], ['estadisticas', 'grid', 'Estadísticas'], ['productos', 'bag', 'Productos'], ['vendedores', 'gift', 'Revende'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos'], ['config', 'shop', 'Ajustes']];
   return (<div className="adm">
     <div className="admtop"><a href="/" target="_blank" rel="noopener"><Logo alto={34} /></a><span className="kicker" style={{ marginLeft: 6 }}>Panel</span>
       <button className="btn o" style={{ marginLeft: 'auto', padding: '9px 13px' }} onClick={async () => { await A('logout'); setLog(false); }}>Salir</button></div>
@@ -27,6 +27,7 @@ export default function Panel() {
     {tab === 'pedidos' && <Pedidos avisar={avisar} setNuevos={setNuevos} />}
     {tab === 'estadisticas' && <Estadisticas />}
     {tab === 'productos' && <Productos avisar={avisar} />}
+    {tab === 'vendedores' && <Vendedores avisar={avisar} />}
     {tab === 'ruleta' && <Ruleta avisar={avisar} />}
     {tab === 'avisos' && <Avisos />}
     {tab === 'config' && <Config avisar={avisar} />}
@@ -74,6 +75,7 @@ function Pedidos({ avisar, setNuevos }) {
       <div style={{ marginTop: 6 }}>{p.entrega === 'Envío' ? <>🛵 <b>Envío</b> a {p.dir}</> : <>🏪 <b>Retira</b> en el local</>}</div>
       <div style={{ whiteSpace: 'pre-line', fontSize: 13.5, background: '#111114', borderRadius: 12, padding: '9px 11px', margin: '8px 0', color: 'var(--txt2)' }}>{p.detalle}</div>
       {(p.descuento > 0 || p.envio > 0) && <div className="muted">Subtotal {plata(p.subtotal)}{p.descPremio ? ' · premio −' + plata(p.descPremio) : ''}{p.descPago ? ' · desc. pago −' + plata(p.descPago) : ''}{p.envio ? ' · envío ' + plata(p.envio) : ''}</div>}
+      {p.vendedor && <div className="muted">🤝 Revendedor <b style={{ color: 'var(--txt)' }}>{p.vendedor}</b> · comisión {plata(p.comision)}{p.estado === 'Entregado' ? (p.comisionPagada ? ' · ✅ pagada' : ' · a pagar') : ' · se cobra al entregar'}</div>}
       {p.premio && <div className="muted">🎁 {p.premio}</div>}{p.nota && <div className="aviso y">📝 {p.nota}</div>}{p.ticket && <div className="muted">Cobrado en la caja · ticket {p.ticket}</div>}
       <div className="chips" style={{ margin: '10px 0 0' }}>{d.estados.filter((e) => e !== 'En camino' || p.entrega === 'Envío').map((e) => <button key={e} className={'chip' + (p.estado === e ? ' on' : '')} onClick={() => cambiar(p, e)}>{e}</button>)}</div>
       <button className="btn w" style={{ marginTop: 10, padding: '10px 14px' }} onClick={() => wa(p.tel, msgEstado(p, p.estado))}><Ic n="wa" cl="s" /> Escribirle</button>
@@ -213,6 +215,65 @@ function Productos({ avisar }) {
   </>);
 }
 
+/* ------------------------------------------------------------------ revendedores */
+function Vendedores({ avisar }) {
+  const [d, setD] = useState(null), [nuevo, setNuevo] = useState({ nombre: '', telefono: '' }), [ver, setVer] = useState(null), [peds, setPeds] = useState([]);
+  const cargar = useCallback(async () => { const r = await A('vendedores'); if (r.ok) setD(r); }, []);
+  useEffect(() => { cargar(); }, [cargar]);
+  const sitio = typeof window !== 'undefined' ? window.location.origin : '';
+  const link = (v) => sitio + '/?ref=' + v.codigo;
+  const copiar = async (t) => { try { await navigator.clipboard.writeText(t); avisar('Link copiado.'); } catch { avisar('No pude copiar: mantené apretado el link.', true); } };
+  const bienvenida = (v) => `¡Hola ${v.nombre.split(' ')[0]}! 🙌 Ya sos revendedor de Américas Drugstore.\n\nTu link para compartir:\n${link(v)}\n\n` +
+    `Cada pedido que hagan desde tu link y se entregue, te llevás el ${d.pct}% de la ganancia. Te pagamos todas las semanas.\n\n` +
+    `Tip: mandalo a tus grupos y estados de WhatsApp con las ofertas de la semana 🔥`;
+  const resumen = (v) => `¡Hola ${v.nombre.split(' ')[0]}! 📊 Tu resumen en Américas Drugstore:\n\n` +
+    `• Pedidos: ${v.pedidos}\n• Ventas entregadas: ${plata(v.vendido)}\n• Comisión a cobrar: ${plata(v.pendiente)}\n• En camino (se suma al entregar): ${plata(v.enCurso)}\n• Ya cobraste: ${plata(v.pagado)}\n\n¡Seguí así! Tu link: ${link(v)}`;
+  if (!d) return <div className="vacio">Cargando…</div>;
+  const tot = d.vendedores.reduce((a, v) => ({ pend: a.pend + v.pendiente, sem: a.sem + v.semana, vend: a.vend + v.vendido }), { pend: 0, sem: 0, vend: 0 });
+  return (<>
+    <div className="aviso ok" style={{ marginTop: 0 }}>Cada revendedor tiene <b>su link</b>. Quien entra por ahí y compra queda asociado a él durante 30 días. Gana el <b>{d.pct}% de la ganancia</b> de cada pedido <b>entregado</b> (el % se cambia en Ajustes). Les pagás <b>una vez por semana</b>.</div>
+    <div className="kps" style={{ margin: '12px 0' }}>
+      <div className="kp hero"><div className="l">A pagar ahora</div><div className="v">{plata(tot.pend)}</div><div className="s">pedidos entregados</div></div>
+      <div className="kp"><div className="l">Comisiones últimos 7 días</div><div className="v">{plata(tot.sem)}</div></div>
+      <div className="kp"><div className="l">Vendido por revendedores</div><div className="v">{plata(tot.vend)}</div></div>
+      <div className="kp"><div className="l">Revendedores</div><div className="v">{d.vendedores.filter((v) => v.activo).length}</div></div>
+    </div>
+
+    <div className="pcard"><b>➕ Sumar revendedor</b>
+      <div className="g2" style={{ marginTop: 4 }}>
+        <div><label className="campo">Nombre</label><input className="inp" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} placeholder="Ej. Pedro Gómez" /></div>
+        <div><label className="campo">WhatsApp</label><input className="inp" type="tel" value={nuevo.telefono} onChange={(e) => setNuevo({ ...nuevo, telefono: e.target.value })} placeholder="343 4123456" /></div>
+      </div>
+      <button className="btn r blk" style={{ marginTop: 12 }} onClick={async () => { const r = await A('guardarVendedor', nuevo); avisar(r.msg, !r.ok); if (r.ok) { setD(r); setNuevo({ nombre: '', telefono: '' }); } }}>Crear y generar su link</button>
+    </div>
+
+    {d.vendedores.map((v) => (<div className="pcard" key={v.codigo} style={{ opacity: v.activo ? 1 : .55 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+        <div><b style={{ font: '900 17px/1.1 var(--hf)' }}>{v.nombre}</b><div className="muted">código <b>{v.codigo}</b>{v.telefono ? ' · +' + v.telefono : ''}{!v.activo ? ' · PAUSADO' : ''}</div></div>
+        <div style={{ textAlign: 'right' }}><div className="muted">a pagar</div><b style={{ font: '900 20px/1 var(--hf)', color: v.pendiente ? 'var(--gold)' : 'var(--txt)' }}>{plata(v.pendiente)}</b></div>
+      </div>
+      <div className="g4" style={{ marginTop: 10 }}>
+        <div className="kp"><div className="l">Pedidos</div><div className="v" style={{ fontSize: 20 }}>{v.pedidos}</div></div>
+        <div className="kp"><div className="l">Vendido (entregado)</div><div className="v" style={{ fontSize: 20 }}>{plata(v.vendido)}</div></div>
+        <div className="kp"><div className="l">En curso</div><div className="v" style={{ fontSize: 20 }}>{plata(v.enCurso)}</div></div>
+        <div className="kp"><div className="l">Ya cobrado</div><div className="v" style={{ fontSize: 20 }}>{plata(v.pagado)}</div></div>
+      </div>
+      {v.sinCosto > 0 && <div className="aviso y">⚠️ {v.sinCosto} producto(s) vendidos no tienen <b>costo</b> cargado en la caja (columna J): no suman comisión. Cargalo en la caja y la próxima venta se calcula bien.</div>}
+      <div className="inp" style={{ marginTop: 10, fontSize: 13, wordBreak: 'break-all', cursor: 'pointer' }} onClick={() => copiar(link(v))}>🔗 {link(v)}</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+        <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={() => copiar(link(v))}>Copiar link</button>
+        {v.telefono && <button className="btn w" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={() => wa(v.telefono, bienvenida(v))}>Mandarle su link</button>}
+        {v.telefono && <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={() => wa(v.telefono, resumen(v))}>Mandar resumen</button>}
+        {v.pendiente > 0 && <button className="btn r" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={async () => { if (!window.confirm('¿Ya le pagaste ' + plata(v.pendiente) + ' a ' + v.nombre + '? Se marca como pagado.')) return; const r = await A('pagarVendedor', { codigo: v.codigo }); avisar(r.msg, !r.ok); if (r.ok) setD(r); }}>✅ Marcar pagado {plata(v.pendiente)}</button>}
+        <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={async () => { if (ver === v.codigo) { setVer(null); return; } const r = await A('pedidosVendedor', { codigo: v.codigo }); setPeds(r.pedidos || []); setVer(v.codigo); }}>{ver === v.codigo ? 'Ocultar pedidos' : 'Ver pedidos'}</button>
+        <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={async () => { const r = await A('guardarVendedor', { ...v, activo: !v.activo }); avisar(r.msg, !r.ok); if (r.ok) setD(r); }}>{v.activo ? 'Pausar' : 'Reactivar'}</button>
+      </div>
+      {ver === v.codigo && <div style={{ marginTop: 10 }}>{!peds.length ? <div className="muted">Todavía no tiene pedidos.</div> : peds.map((p) => (
+        <div className="fx" key={p.nro}><span>{p.nro} · {hora(p.fecha)} · {p.cliente} · {p.estado}</span><span>{plata(p.total)} → <b>{plata(p.comision)}</b>{p.comisionPagada ? ' ✅' : ''}</span></div>))}</div>}
+    </div>))}
+  </>);
+}
+
 /* ------------------------------------------------------------------ ruleta */
 function Ruleta({ avisar }) {
   const [d, setD] = useState(null), [cats, setCats] = useState([]);
@@ -259,6 +320,7 @@ const CAMPOS = [
   ['Pedidos', [['abierta', 'Tienda abierta (tomando pedidos)', 'b'], ['msgCerrada', 'Mensaje cuando está cerrada'], ['minimo', 'Pedido mínimo ($)', 'n'], ['pagos', 'Medios de pago (separados por coma)'], ['descPago', 'Descuento por medio de pago (ej.: Efectivo 10%, Transferencia 10%)'], ['alias', 'Alias / CBU para transferencias'], ['sinStock', 'Productos sin stock', 's']]],
   ['Envíos', [['envio', 'Hacemos envíos', 'b'], ['costoEnvio', 'Costo del envío ($)', 'n'], ['envioGratisDesde', 'Envío gratis desde ($, 0 = nunca)', 'n'], ['zona', 'Zona de envío']]],
   ['Textos de la página', [['destacado', 'Título grande de la portada'], ['bajada', 'Texto debajo del título', 't'], ['servicios', 'Servicios en el local (separados por coma)'], ['nosotros', 'Sobre nosotros', 't']]],
+  ['Revendedores', [['comisionPct', 'Comisión: % de la ganancia de cada pedido entregado', 'n']]],
   ['Ruleta', [['ruleta', 'Ruleta activa', 'b'], ['ruletaAlEntrar', 'Mostrarla sola al entrar (una vez cada 3 días)', 'b'], ['diasGiro', 'Un giro cada (días)', 'n'], ['validez', 'El premio vale (días)', 'n']]],
   ['Avisos', [['callmebot', 'Aviso automático a tu WhatsApp: apikey de CallMeBot (opcional)']]]
 ];

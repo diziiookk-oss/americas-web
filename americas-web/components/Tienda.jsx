@@ -9,7 +9,9 @@ import { plata, precioLinea, precioUnit, cantTxt, cuentas, pctPago, norm } from 
 const Ctx = createContext(null);
 export const useTienda = () => useContext(Ctx);
 
-const K = { carrito: 'ad_carrito_v3', premio: 'ad_premio_v3', yo: 'ad_cliente_v1', dev: 'ad_dev', vis: 'ad_vis', mis: 'ad_mis_pedidos', ruleta: 'ad_ruleta_vista' };
+const K = { carrito: 'ad_carrito_v3', premio: 'ad_premio_v3', yo: 'ad_cliente_v1', dev: 'ad_dev', vis: 'ad_vis', mis: 'ad_mis_pedidos', ruleta: 'ad_ruleta_vista', ref: 'ad_ref' };
+const REF_DIAS = 30;   // el cliente queda asociado al revendedor durante 30 días desde que entró por su link
+const refActual = () => { const r = leer(K.ref, null); return r && r.c && Date.now() - r.t < REF_DIAS * 86400000 ? r.c : ''; };
 const leer = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const azar = (n) => { const a = 'abcdefghijkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < n; i++) s += a[Math.floor(Math.random() * a.length)]; return s; };
@@ -49,6 +51,7 @@ export function TiendaProvider({ cfg, premios, sugeridos = [], children }) {
   // arranque: lo guardado en el celular
   useEffect(() => {
     setCarrito(leer(K.carrito, {}) || {});
+    try { const r = new URLSearchParams(window.location.search).get('ref'); if (r) { const c = r.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16); if (c) { guardar(K.ref, { c, t: Date.now() }); cola.current.push(['revendedor', c]); } } } catch {}
     let pz = leer(K.premio, null);
     if (pz && pz.vence && Date.now() > pz.vence + 86400000) { pz = null; guardar(K.premio, null); }
     setPremio(pz);
@@ -159,7 +162,7 @@ function Carrito({ onListo }) {
     setEnviando(true);
     const t = useTiendaIds();
     const r = await api('pedido', { nombre: f.nombre, tel: f.tel, entrega: f.entrega, direccion: f.direccion, pago: f.pago, nota: f.nota, visitante: t.vis, sesion: t.ses,
-      items: lineas.map((l) => ({ id: l.p.id, cant: l.c })), codigoPremio: usar ? premio.codigo : '' });
+      items: lineas.map((l) => ({ id: l.p.id, cant: l.c })), codigoPremio: usar ? premio.codigo : '', ref: refActual() });
     setEnviando(false);
     if (!r || !r.ok) return toast(r?.msg || 'No se pudo enviar.', true);
     if (usar) fijarPremio(null);

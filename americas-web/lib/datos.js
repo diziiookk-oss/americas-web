@@ -15,6 +15,7 @@ export const CONFIG_DEF = {
   envioGratisDesde: 30000,
   zona: 'Paraná',
   minimo: 0,
+  comisionPct: 30,                 // revendedores: % de la ganancia de cada pedido entregado
   pagos: 'Efectivo, Transferencia, Mercado Pago',
   descPago: 'Efectivo 10%, Transferencia 10%',
   alias: '',
