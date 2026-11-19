@@ -8,6 +8,20 @@ const K = 'ad_cliente_v1';
 const leer = () => { try { return JSON.parse(localStorage.getItem(K) || '{}') || {}; } catch { return {}; } };
 const guardar = (v) => { try { localStorage.setItem(K, JSON.stringify({ ...leer(), ...v })); } catch {} };
 
+// "Ya soy del Club": entra solo con el WhatsApp (sin contraseña: el club no guarda nada sensible).
+function YaSoy({ onOk }) {
+  const [abierto, setAbierto] = useState(false), [tel, setTel] = useState(''), [msg, setMsg] = useState(''), [env, setEnv] = useState(false);
+  if (!abierto) return <button className="linkito" style={{ marginTop: 10, background: 'none', border: 0 }} onClick={() => setAbierto(true)}>¿Ya sos del Club? <b style={{ marginLeft: 4 }}>Entrá con tu WhatsApp</b></button>;
+  return (<form style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 12 }} onSubmit={async (ev) => {
+    ev.preventDefault(); setEnv(true); setMsg(''); const r = await api('club', { tel }); setEnv(false);
+    if (r && r.ok && r.registrado) onOk(tel, r); else setMsg('No encontramos ese WhatsApp en el Club. Sumate arriba, es gratis 🙌');
+  }}>
+    <label className="campo">Tu WhatsApp</label>
+    <div style={{ display: 'flex', gap: 8 }}><input className="inp" type="tel" inputMode="tel" placeholder="Ej. 343 4123456" value={tel} onChange={(x) => setTel(x.target.value)} /><button className="btn o" disabled={env}>{env ? '…' : 'Entrar'}</button></div>
+    {msg && <div className="aviso y">{msg}</div>}
+  </form>);
+}
+
 export default function ClubApp() {
   const [f, setF] = useState({ nombre: '', tel: '', cumple: '', acepta: true }), [e, setE] = useState(null), [msg, setMsg] = useState(null), [env, setEnv] = useState(false);
   useEffect(() => { const y = leer(); setF((x) => ({ ...x, nombre: y.nombre || '', tel: y.tel || '' })); if (y.tel) consultar(y.tel); }, []); // eslint-disable-line
@@ -42,6 +56,7 @@ export default function ClubApp() {
         {msg && <div className={'aviso' + (msg.ok ? ' ok' : '')}>{msg.t}</div>}
         <button className="btn r blk" style={{ marginTop: 14 }} disabled={env}>{env ? 'Un momento…' : 'Sumarme al Club'}</button>
       </form>
+      <YaSoy onOk={(tel, est) => { guardar({ tel }); setE(est); }} />
     </div>)}
 
     <div className="pasos3" style={{ marginTop: 14 }}>

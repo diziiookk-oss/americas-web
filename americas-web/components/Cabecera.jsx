@@ -34,6 +34,9 @@ export default function Cabecera({ direccion }) {
   const n = Object.keys(carrito).length;
   const activo = (h) => h === '/' ? pathname === '/' : pathname.startsWith(h) || (h === '/productos' && (pathname.startsWith('/categoria') || pathname.startsWith('/producto/')));
   const [d1, ...d2] = String(direccion || '').split(',');
+  const [cuenta, setCuenta] = useState(false), [yo, setYo] = useState('');
+  useEffect(() => { setCuenta(false); }, [pathname]);
+  useEffect(() => { if (!cuenta) return; try { const y = JSON.parse(localStorage.getItem('ad_cliente_v1') || '{}'); setYo((y.nombre || '').split(' ')[0]); } catch {} }, [cuenta]);
   if (pathname.startsWith('/admin')) return null;
   // Fija arriba queda solo la barra del logo y el carrito (en el celu ocupa poco);
   // el buscador del celu y las pestañas se van con el scroll.
@@ -48,7 +51,14 @@ export default function Cabecera({ direccion }) {
               {direccion && <div className="dir"><Ic n="pin" cl="s" /><div><b>{d1}</b>{d2.join(',').trim()}</div></div>}
               <Link className="rb lupa" href="/productos" aria-label="Buscar"><Ic n="search" /></Link>
               {cfg.whatsapp && <a className="rb" href={'https://wa.me/' + cfg.whatsapp + '?text=' + encodeURIComponent('¡Hola! Tengo una consulta 😊')} target="_blank" rel="noopener" aria-label="WhatsApp" onClick={() => ev('whatsapp', 'header')}><Ic n="wa" /></a>}
+              <button className="rb" onClick={() => setCuenta((x) => !x)} aria-label="Mi cuenta" aria-expanded={cuenta}><Ic n="user" /></button>
               <button className="rb" id="cartBtn" onClick={abrirCarrito} aria-label="Mi pedido"><Ic n="bag" /><b>{n || ''}</b></button>
+              {cuenta && <div className="cuenta" role="menu">
+                <div className="cuh">{yo ? <>¡Hola, <b>{yo}</b>! 👋</> : <>Mi cuenta</>}</div>
+                <Link className="cui" href="/club" role="menuitem"><span className="cuic">⭐</span><div><b>{yo ? 'Mi tarjeta del Club' : 'Club Américas'}</b><small>{yo ? 'Mirá cuántas compras llevás' : 'Entrá o sumate gratis: 15% OFF cada 5 compras'}</small></div></Link>
+                <Link className="cui" href="/mis-pedidos" role="menuitem"><span className="cuic">🧾</span><div><b>Mis pedidos</b><small>Seguí el estado de tu pedido</small></div></Link>
+                <Link className="cui" href="/vendedor" role="menuitem"><span className="cuic">💰</span><div><b>Soy revendedor</b><small>Entrá a tu panel o creá tu cuenta</small></div></Link>
+              </div>}
             </div>
           </div>
         </div>

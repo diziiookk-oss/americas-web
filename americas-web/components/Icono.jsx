@@ -15,7 +15,7 @@ export const IC = {
   leaf: '<path d="M5 19C5 10 11 5 20 4c-1 9-6 15-15 15zM5 19l8-8"/>', basket: '<path d="M3 10h18l-2 10H5zM8 10l3-6M16 10l-3-6M9 14v3M12 14v3M15 14v3"/>', smoke: '<path d="M3 15h14v3H3zM19 15v3M21 15v3M17 11c0-2 2-2 2-4M20 11c0-2 2-2 2-4"/>',
   bottle: '<path d="M10 3h4v3l2 3v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l2-3z"/><path d="M8 13h8"/>', battery: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M7 10v4M11 10v4"/>', milk: '<path d="M8 3h8v3l2 3v12H6V9l2-3z"/><path d="M6 13h12"/>',
   meat: '<path d="M15 4a5 5 0 0 1 4.5 7.2L11 19.6a3 3 0 1 1-4-4L15.3 7"/><circle cx="15" cy="8" r="1.5"/>', bread: '<path d="M5 11a4 4 0 0 1 0-8h14a4 4 0 0 1 0 8v9H5z"/>', apple: '<path d="M12 7c-3-2-8-1-8 5s3 9 5 9c1 0 2-.5 3-.5s2 .5 3 .5c2 0 5-3 5-9s-5-7-8-5zM12 7c0-2 1-4 3-4"/>',
-  tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>', clean: '<path d="M9 3h6l-1 4h-4zM7 7h10l1 14H6zM10 11v6M14 11v6"/>', ice: '<path d="M7 10a5 5 0 0 1 10 0zM8 10l4 11 4-11"/>'
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>', clean: '<path d="M9 3h6l-1 4h-4zM7 7h10l1 14H6zM10 11v6M14 11v6"/>', ice: '<path d="M7 10a5 5 0 0 1 10 0zM8 10l4 11 4-11"/>'
 };
 
 export function Ic({ n, cl = '', style }) {
