@@ -8,7 +8,8 @@ import { plata, precioUnit, pctOferta, maxEscalon, pagoMax } from '@/lib/precios
 export function Foto({ p, cls = 'ph', children }) {
   const [mal, setMal] = useState(false);
   if (!p.img || mal) return <div className={cls + ' nofoto'}><div className="ini"><Ic n={iconoCat(p.categoria + ' ' + p.nombre)} /><b>{p.categoria}</b></div>{children}</div>;
-  return <div className={cls}><img src={p.img} alt={p.nombre} loading="lazy" referrerPolicy="no-referrer" onError={() => setMal(true)} />{children}</div>;
+  // Fondo: la misma foto desenfocada (empareja fotos sacadas en distintos lugares). Adelante: la foto entera, centrada y con sombra.
+  return <div className={cls + ' confoto'}><i className="fondo" style={{ backgroundImage: `url("${p.img}")` }} aria-hidden="true" /><img src={p.img} alt={p.nombre} loading="lazy" referrerPolicy="no-referrer" onError={() => setMal(true)} />{children}</div>;
 }
 
 export default function Tarjeta({ p }) {
@@ -31,7 +32,7 @@ export default function Tarjeta({ p }) {
       </Foto></Link>
       <div className="bd">
         <Link className="n" href={url}><h3 style={{ font: 'inherit', margin: 0 }}>{p.nombre}</h3></Link>
-        {pocas && <div className="pocas">🔥 ¡Últimas {p.max} unidades!</div>}
+        {pocas && <div className="pocas">🔥 {p.max === 1 ? '¡Queda la última!' : '¡Últimas ' + p.max + ' unidades!'}</div>}
         <div className="pr"><b>{plata(precioUnit(p))}</b>{p.unidad === 'kg' && <small>/kg</small>}{pct > 0 && <s>{plata(p.precio)}</s>}</div>
         {mp.pct > 0 && <div className="ef"><b>{plata(precioUnit(p) * (1 - mp.pct / 100))}</b> en {mp.txt.split(' o ')[0]}{mp.txt.includes(' o ') ? ' o transf.' : ''}</div>}
         {boton}

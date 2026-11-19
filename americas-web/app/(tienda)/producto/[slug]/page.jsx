@@ -39,7 +39,7 @@ export default async function Producto({ params }) {
         {mp.pct > 0 && <div className="caja"><div className="ic"><Ic n="cash" cl="s" /></div><div><b>{plata(precioUnit(p) * (1 - mp.pct / 100))}{p.unidad === 'kg' ? '/kg' : ''}</b> pagando en {mp.txt} <b style={{ color: 'var(--red2)' }}>({mp.pct}% OFF)</b></div></div>}
         {p.escalones.length > 0 && <div className="caja ok"><div className="ic"><Ic n="star" cl="s" /></div><div><b>Descuento online por cantidad:</b> {p.escalones.map((x) => minTxt(p, x) + ' −' + x.pct + '%').join(' · ')}</div></div>}
         {p.descripcion && <p className="desc">{p.descripcion}</p>}
-        {p.hay ? <span className={'estado ' + (p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? 'no' : 'si')}><i />{p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? '¡Últimas ' + p.max + ' unidades!' : 'En stock · listo para llevar'}</span>
+        {p.hay ? <span className={'estado ' + (p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? 'no' : 'si')}><i />{p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? (p.max === 1 ? '¡Queda la última!' : '¡Últimas ' + p.max + ' unidades!') : 'En stock · listo para llevar'}</span>
           : <><span className="estado no"><i />Sin stock por el momento</span><div className="muted" style={{ marginBottom: 8 }}>Podés encargarlo igual: lo sumás a tu pedido y coordinamos la entrega por WhatsApp cuando vuelva a ingresar.</div></>}
         <Acciones p={paraCliente(p)} />
         <div className="info2"><span><Ic n="shop" cl="s" />Retiro gratis{c.direccion ? ' en ' + c.direccion.split(',')[0] : ''}</span>{c.envio && <span><Ic n="moto" cl="s" />Envíos a domicilio{c.zona ? ' en ' + c.zona : ''}</span>}</div>
