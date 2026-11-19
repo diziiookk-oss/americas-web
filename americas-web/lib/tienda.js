@@ -2,6 +2,7 @@
 import { db } from './db';
 import { getConfig, getProductos, olvidar } from './datos';
 import { cuentas, cantTxt, plata, telWA } from './precios';
+import { estadoClub } from './club';
 
 const corto = (s, n = 100) => String(s ?? '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, n);
 const soloNum = (t) => String(t || '').replace(/\D/g, '').replace(/^0+/, '');
@@ -85,7 +86,8 @@ export async function crearPedido(ped) {
     const [pz] = await s`SELECT * FROM premios WHERE texto = ${giro.premio} ORDER BY activo DESC LIMIT 1`;
     if (pz) premio = { texto: pz.texto, tipo: pz.tipo, valor: Number(pz.valor), minimo: Number(pz.minimo), categoria: pz.categoria || '' };
   }
-  const C = cuentas({ lineas, premio, pago, entrega: envio ? 'Envío' : 'Retiro', cfg });
+  const club = await estadoClub(tel, s);   // Club Américas: ¿esta es su compra con premio?
+  const C = cuentas({ lineas, premio, pago, entrega: envio ? 'Envío' : 'Retiro', cfg, clubPct: club.toca ? club.pct : 0 });
   if (cfg.minimo > 0 && C.sub < cfg.minimo) return { ok: false, msg: 'El pedido mínimo es ' + plata(cfg.minimo) + '.' };
   if (premio && C.sinCat) return { ok: false, msg: 'Tu premio "' + premio.texto + '" es para productos de ' + premio.categoria + '. Agregá alguno o sacá el premio.' };
   if (premio && C.falta) return { ok: false, msg: 'Para usar el premio "' + premio.texto + '" la compra mínima es ' + plata(premio.minimo) + '.' };
@@ -105,13 +107,13 @@ export async function crearPedido(ped) {
       vendedor = v.codigo;
       const costos = {}; (await s`SELECT id, costo FROM productos WHERE id = ANY(${lineas.map((l) => l.p.id)})`).forEach((r) => { costos[r.id] = r.costo === null ? null : Number(r.costo); });
       lineas.forEach((l) => { const co = costos[l.p.id]; if (!(co > 0)) { sinCosto++; return; } ganancia += l.pr.total - co * l.c; });
-      ganancia = Math.max(0, Math.round(ganancia - C.dPremio - C.dPago));
+      ganancia = Math.max(0, Math.round(ganancia - C.dPremio - C.dClub - C.dPago));
       comision = Math.round(ganancia * (Number(cfg.comisionPct) || 0) / 100);
     }
   }
 
-  const [row] = await s`INSERT INTO pedidos (cliente, telefono, entrega, direccion, pago, items, detalle, subtotal, desc_premio, desc_pago, envio, total, premio, nota, vendedor, ganancia, comision, sin_costo)
-    VALUES (${nombre}, ${tel}, ${envio ? 'Envío' : 'Retiro'}, ${envio ? dir : ''}, ${pago}, ${s.json(items)}, ${detalle}, ${C.sub}, ${C.dPremio}, ${C.dPago}, ${C.envio}, ${C.total}, ${premioTxt}, ${nota}, ${vendedor}, ${ganancia}, ${comision}, ${sinCosto})
+  const [row] = await s`INSERT INTO pedidos (cliente, telefono, entrega, direccion, pago, items, detalle, subtotal, desc_premio, desc_pago, envio, total, premio, nota, vendedor, ganancia, comision, sin_costo, desc_club)
+    VALUES (${nombre}, ${tel}, ${envio ? 'Envío' : 'Retiro'}, ${envio ? dir : ''}, ${pago}, ${s.json(items)}, ${detalle}, ${C.sub}, ${C.dPremio}, ${C.dPago}, ${C.envio}, ${C.total}, ${premioTxt}, ${nota}, ${vendedor}, ${ganancia}, ${comision}, ${sinCosto}, ${C.dClub})
     RETURNING num`;
   const nro = 'P-' + String(row.num).padStart(4, '0');
   await s`UPDATE pedidos SET nro = ${nro} WHERE num = ${row.num}`;
@@ -122,6 +124,7 @@ export async function crearPedido(ped) {
   const msg = '🛒 *Pedido ' + nro + '* — ' + cfg.negocio + '\n\n' + detalle + '\n\n' +
     'Subtotal: ' + plata(C.sub) + (C.ahorro > 0 ? ' (ahorrás ' + plata(C.ahorro) + ')' : '') + '\n' +
     (C.dPremio ? 'Premio ruleta (' + premio.texto + '): −' + plata(C.dPremio) + '\n' : '') +
+    (C.dClub ? '🎁 Club Américas (' + club.pct + '% OFF en su compra ' + (club.entregados + 1) + '): −' + plata(C.dClub) + '\n' : '') +
     (C.dPago ? C.pp + '% OFF pagando con ' + pago.toLowerCase() + ': −' + plata(C.dPago) + '\n' : '') +
     (envio ? 'Envío: ' + (C.envio ? plata(C.envio) : 'GRATIS') + '\n' : '') +
     '*Total: ' + plata(C.total) + '*\n\n' +

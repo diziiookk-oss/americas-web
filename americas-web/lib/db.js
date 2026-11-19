@@ -62,6 +62,10 @@ ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS clave text DEFAULT '';
 ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS estado text DEFAULT 'activo';
 ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS nota text DEFAULT '';
 ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS alias text DEFAULT '';
+CREATE TABLE IF NOT EXISTS clientes (
+  tel text PRIMARY KEY, nombre text NOT NULL, cumple text DEFAULT '', acepta boolean DEFAULT true, creado timestamptz DEFAULT now()
+);
+ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS desc_club numeric DEFAULT 0;
 `;
 
 const PREMIOS_DEF = [

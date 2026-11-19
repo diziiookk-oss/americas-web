@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as A from '@/lib/admin';
+import { listarClientes } from '@/lib/club';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,7 @@ export async function POST(req, { params }) {
       case 'guardarVendedor': r = await A.guardarVendedor(b); break;
       case 'pagarVendedor': r = await A.pagarVendedor(b); break;
       case 'decidirVendedor': r = await A.decidirVendedor(b); break;
+      case 'clientes': r = { ok: true, ...(await listarClientes(b.filtro)) }; break;
       case 'pedidosVendedor': r = { ok: true, ...(await A.pedidosVendedor(b)) }; break;
       default: return NextResponse.json({ ok: false, msg: 'Acción desconocida.' }, { status: 404 });
     }

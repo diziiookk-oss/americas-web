@@ -16,6 +16,9 @@ export const CONFIG_DEF = {
   zona: 'Paraná',
   minimo: 0,
   comisionPct: 30,                 // revendedores: % de la ganancia de cada pedido entregado
+  club: true,                      // Club Américas: registro opcional con premio por compras
+  clubCada: 5,                     // cada cuántas compras entregadas hay premio (la 5ª, 10ª…)
+  clubPct: 15,                     // % de descuento en esa compra
   pagos: 'Efectivo, Transferencia, Mercado Pago',
   descPago: 'Efectivo 10%, Transferencia 10%',
   alias: '',

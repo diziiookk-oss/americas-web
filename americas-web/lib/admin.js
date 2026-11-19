@@ -66,7 +66,7 @@ export async function sincronizar(body) {
 export const ESTADOS = ['Nuevo', 'Preparando', 'Listo', 'En camino', 'Entregado', 'Cancelado'];
 function pedidoJSON(r) {
   return { nro: r.nro, fecha: new Date(r.fecha).getTime(), cliente: r.cliente, tel: r.telefono, entrega: r.entrega, dir: r.direccion, pago: r.pago, items: r.items || [],
-    detalle: r.detalle, subtotal: Number(r.subtotal), descPremio: Number(r.desc_premio), descPago: Number(r.desc_pago), descuento: Number(r.desc_premio) + Number(r.desc_pago),
+    detalle: r.detalle, subtotal: Number(r.subtotal), descPremio: Number(r.desc_premio), descPago: Number(r.desc_pago), descClub: Number(r.desc_club) || 0, descuento: Number(r.desc_premio) + Number(r.desc_pago) + (Number(r.desc_club) || 0),
     envio: Number(r.envio), total: Number(r.total), premio: r.premio, estado: r.estado, nota: r.nota, ticket: r.ticket, cobrado: r.cobrado_en_caja,
     vendedor: r.vendedor || '', ganancia: Number(r.ganancia) || 0, comision: Number(r.comision) || 0, comisionPagada: r.comision_pagada ? new Date(r.comision_pagada).getTime() : null };
 }

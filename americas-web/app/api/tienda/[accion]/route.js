@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { crearPedido, girar, seguimiento, avisame, registrarEventos } from '@/lib/tienda';
+import { estadoClub, registrarCliente } from '@/lib/club';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +15,8 @@ export async function POST(req, { params }) {
     else if (accion === 'girar') r = await girar(b.dispositivo);
     else if (accion === 'seguimiento') r = await seguimiento(b.lista);
     else if (accion === 'avisame') r = await avisame(b);
+    else if (accion === 'club') { const { nombre, ...x } = await estadoClub(b.tel); r = { ok: true, ...x }; }   // sin nombre: no se expone quién es
+    else if (accion === 'unirme') r = await registrarCliente(b);
     else if (accion === 'eventos') { await registrarEventos(b.v, b.s, b.ev); r = { ok: true }; }
     else return NextResponse.json({ ok: false, msg: 'Acción desconocida.' }, { status: 404 });
     return NextResponse.json(r);

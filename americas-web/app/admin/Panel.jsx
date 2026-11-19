@@ -16,9 +16,9 @@ const wa = (tel, txt) => window.open('https://wa.me/' + telWA(tel) + '?text=' + 
 // Secciones del panel: las 5 primeras van en la barra de abajo del celu; el resto en "Más".
 const SECCIONES = [
   ['inicio', 'home', 'Inicio'], ['pedidos', 'receipt', 'Pedidos'], ['productos', 'bag', 'Productos'], ['vendedores', 'gift', 'Revendedores'],
-  ['estadisticas', 'grid', 'Estadísticas'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos de stock'], ['config', 'shop', 'Ajustes']
+  ['clientes', 'star', 'Clientes y Club'], ['estadisticas', 'grid', 'Estadísticas'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos de stock'], ['config', 'shop', 'Ajustes']
 ];
-const TITULOS = { inicio: 'Inicio', pedidos: 'Pedidos', productos: 'Productos', vendedores: 'Revendedores', estadisticas: 'Estadísticas', ruleta: 'Ruleta de premios', avisos: 'Avisos de stock', config: 'Ajustes de la tienda' };
+const TITULOS = { inicio: 'Inicio', pedidos: 'Pedidos', productos: 'Productos', vendedores: 'Revendedores', clientes: 'Clientes y Club', estadisticas: 'Estadísticas', ruleta: 'Ruleta de premios', avisos: 'Avisos de stock', config: 'Ajustes de la tienda' };
 
 export default function Panel() {
   const [log, setLog] = useState(null), [tab, setTab] = useState('inicio'), [extra, setExtra] = useState(null), [toast, setToast] = useState(null), [nuevos, setNuevos] = useState(0), [mas, setMas] = useState(false);
@@ -48,6 +48,7 @@ export default function Panel() {
       <h1 className="adh1">{TITULOS[tab]}</h1>
       {tab === 'inicio' && <Inicio avisar={avisar} ir={ir} />}
       {tab === 'pedidos' && <Pedidos avisar={avisar} setNuevos={setNuevos} />}
+      {tab === 'clientes' && <Clientes />}
       {tab === 'estadisticas' && <Estadisticas />}
       {tab === 'productos' && <Productos avisar={avisar} filtroInicial={extra} />}
       {tab === 'vendedores' && <Vendedores avisar={avisar} />}
@@ -163,7 +164,7 @@ function Pedidos({ avisar, setNuevos }) {
       {p.estado !== 'Cancelado' && <div className="pasos">{pasos.map((x, i) => <div key={x} className={'paso' + (i <= ip ? ' ok' : '')}><i>{i < ip || p.estado === 'Entregado' ? '✓' : i + 1}</i>{x}</div>)}</div>}
       <div className="pdato">{p.entrega === 'Envío' ? <>🛵 <b>Envío</b> a {p.dir}</> : <>🏪 <b>Retira</b> en el local</>}</div>
       <div className="pdet">{p.detalle}</div>
-      {(p.descuento > 0 || p.envio > 0) && <div className="muted">Subtotal {plata(p.subtotal)}{p.descPremio ? ' · premio −' + plata(p.descPremio) : ''}{p.descPago ? ' · desc. pago −' + plata(p.descPago) : ''}{p.envio ? ' · envío ' + plata(p.envio) : ''}</div>}
+      {(p.descuento > 0 || p.envio > 0) && <div className="muted">Subtotal {plata(p.subtotal)}{p.descPremio ? ' · premio −' + plata(p.descPremio) : ''}{p.descClub ? ' · ⭐ club −' + plata(p.descClub) : ''}{p.descPago ? ' · desc. pago −' + plata(p.descPago) : ''}{p.envio ? ' · envío ' + plata(p.envio) : ''}</div>}
       {p.vendedor && <div className="muted">🤝 Revendedor <b style={{ color: 'var(--txt)' }}>{p.vendedor}</b> · comisión {plata(p.comision)}{p.estado === 'Entregado' ? (p.comisionPagada ? ' · ✅ pagada' : ' · a pagar') : ' · se cobra al entregar'}</div>}
       {p.premio && <div className="muted">🎁 {p.premio}</div>}{p.nota && <div className="aviso y">📝 {p.nota}</div>}{p.ticket && <div className="muted">Cobrado en la caja · ticket {p.ticket}</div>}
       {aviso[p.nro] && <button className="btn w blk" style={{ marginTop: 10 }} onClick={() => { wa(p.tel, msgEstado(p, aviso[p.nro])); setAviso((a) => { const n = { ...a }; delete n[p.nro]; return n; }); }}><Ic n="wa" cl="s" /> Avisarle a {p.cliente.split(' ')[0]} que está “{aviso[p.nro]}”</button>}
@@ -311,6 +312,38 @@ function Productos({ avisar, filtroInicial }) {
   </>);
 }
 
+/* ------------------------------------------------------------------ clientes y club */
+const FILTROS_CLI = [['', 'Todos'], ['club', '⭐ Del Club'], ['mejores', '🏆 Los que más compran'], ['dormidos', '😴 No compran hace 30 días']];
+function Clientes() {
+  const [f, setF] = useState(''), [d, setD] = useState(null), [q, setQ] = useState('');
+  useEffect(() => { setD(null); A('clientes', { filtro: f }).then((r) => r.ok && setD(r)); }, [f]);
+  const dias = (ms) => ms ? Math.floor((Date.now() - ms) / 86400000) : null;
+  const msg = (c) => {
+    const n = (c.nombre || '').split(' ')[0];
+    if (f === 'dormidos') return `¡Hola ${n}! 👋 Te extrañamos en Américas Drugstore. Esta semana tenemos ofertas nuevas y 10% OFF en efectivo o transferencia 👉 ${window.location.origin}/ofertas`;
+    if (!c.club) return `¡Hola ${n}! 🙌 ¿Sabías que tenemos el Club Américas? Es gratis: cada ${d.cada} compras tenés ${d.pct}% OFF. Sumate acá 👉 ${window.location.origin}/club`;
+    const falta = d.cada - 1 - (c.compras % d.cada);
+    return `¡Hola ${n}! ⭐ Ya llevás ${c.compras % d.cada} compras en el Club Américas. ${falta > 0 ? 'Te faltan ' + falta + ' para tu ' + d.pct + '% OFF.' : '¡Tu próxima compra tiene ' + d.pct + '% OFF!'} 👉 ${window.location.origin}`;
+  };
+  const qq = q.trim().toLowerCase();
+  const L = d ? d.clientes.filter((c) => !qq || (c.nombre + ' ' + c.tel).toLowerCase().includes(qq)) : [];
+  return (<>
+    <div className="aviso ok" style={{ marginTop: 0 }}>Acá está tu <b>base de clientes</b>: todos los que pidieron por la web y los que se sumaron al <b>Club Américas</b> (cada {d?.cada || 5} compras entregadas, {d?.pct || 15}% OFF; se cambia en Ajustes).</div>
+    {d && <div className="kps" style={{ margin: '12px 0' }}>
+      <div className="kp"><div className="l">Clientes</div><div className="v">{d.total}</div></div>
+      <div className="kp hero"><div className="l">En el Club</div><div className="v">{d.enClub}</div></div>
+    </div>}
+    <input className="inp" placeholder="Buscar por nombre o WhatsApp…" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="chips" style={{ marginTop: 10 }}>{FILTROS_CLI.map(([k, t]) => <button key={k} className={'chip' + (f === k ? ' on' : '')} onClick={() => setF(k)}>{t}</button>)}</div>
+    {!d ? <div className="sk" style={{ height: 200 }} /> : !L.length ? <div className="pcard muted" style={{ textAlign: 'center' }}>Todavía no hay clientes acá. Se suman solos cuando hacen pedidos o se anotan en <b>/club</b>.</div>
+      : L.map((c) => (<div className="pcard mini" key={c.tel}>
+        <div style={{ flex: 1, minWidth: 0 }}><b>{c.nombre}</b>{c.club && <span className="etq" style={{ position: 'static', marginLeft: 6, padding: '3px 7px', fontSize: 9 }}>CLUB</span>}
+          <div className="muted">+{c.tel} · {c.compras} compra{c.compras === 1 ? '' : 's'} · {plata(c.gastado)}{c.ultima ? ' · última hace ' + dias(c.ultima) + ' días' : ''}{c.cumple ? ' · 🎂 ' + c.cumple : ''}</div></div>
+        <button className="btn w" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => wa(c.tel, msg(c))}><Ic n="wa" cl="s" /> Escribirle</button>
+      </div>))}
+  </>);
+}
+
 /* ------------------------------------------------------------------ revendedores */
 function Vendedores({ avisar }) {
   const [d, setD] = useState(null), [nuevo, setNuevo] = useState({ nombre: '', telefono: '' }), [ver, setVer] = useState(null), [peds, setPeds] = useState([]);
@@ -431,6 +464,7 @@ const CAMPOS = [
   ['Envíos', [['envio', 'Hacemos envíos', 'b'], ['costoEnvio', 'Costo del envío ($)', 'n'], ['envioGratisDesde', 'Envío gratis desde ($, 0 = nunca)', 'n'], ['zona', 'Zona de envío']]],
   ['Textos de la página', [['destacado', 'Título grande de la portada'], ['bajada', 'Texto debajo del título', 't'], ['servicios', 'Servicios en el local (separados por coma)'], ['nosotros', 'Sobre nosotros', 't']]],
   ['Revendedores', [['comisionPct', 'Comisión: % de la ganancia de cada pedido entregado', 'n']]],
+  ['Club Américas', [['club', 'Club activo', 'b'], ['clubCada', 'Premio cada cuántas compras entregadas', 'n'], ['clubPct', 'Descuento del premio (%)', 'n']]],
   ['Ruleta', [['ruleta', 'Ruleta activa', 'b'], ['ruletaAlEntrar', 'Mostrarla sola al entrar (una vez cada 3 días)', 'b'], ['diasGiro', 'Un giro cada (días)', 'n'], ['validez', 'El premio vale (días)', 'n']]],
   ['Avisos', [['callmebot', 'Aviso automático a tu WhatsApp: apikey de CallMeBot (opcional)']]]
 ];

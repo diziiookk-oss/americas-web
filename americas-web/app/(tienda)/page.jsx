@@ -42,6 +42,12 @@ export default async function Inicio() {
     {top.length > 0 && <><div className="sec"><h3>Los más elegidos ⭐<small>Lo que más se lleva la gente del barrio</small></h3><Link href="/productos">Ver más <Ic n="arrow" cl="s" /></Link></div>
       <div className="fila">{top.map((p) => <Tarjeta key={p.id} p={paraCliente(p)} />)}</div></>}
     <RuletaCTA />
+    {c.club && <><div className="sec" />
+    <Link className="caja" href="/club" style={{ padding: 16, borderColor: 'rgba(242,161,0,.5)' }}>
+      <div className="ic" style={{ width: 48, height: 48, background: '#fff6df', color: '#b07400' }}><Ic n="star" cl="l" /></div>
+      <div style={{ flex: 1 }}><b style={{ font: '800 18px/1.15 var(--hf)' }}>Club Américas: cada {c.clubCada} compras, {c.clubPct}% OFF</b><br /><span className="muted">Gratis y sin vueltas: solo tu nombre y WhatsApp.</span></div>
+      <span className="btn r" style={{ padding: '12px 16px' }}>Sumarme</span>
+    </Link></>}
     <div className="sec" />
     <Link className="caja" href="/vendedor" style={{ padding: 16, borderColor: 'rgba(215,25,32,.35)' }}>
       <div className="ic" style={{ width: 48, height: 48 }}><Ic n="cash" cl="l" /></div>

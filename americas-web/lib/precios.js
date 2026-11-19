@@ -65,7 +65,8 @@ export function minTxt(p, x) { return p.unidad === 'kg' ? (x.min >= 1 ? String(x
 
 // Totales del pedido (mismo cálculo en el carrito y en el servidor).
 // lineas: [{ p, c }]; premio: { tipo, valor, minimo, categoria } | null
-export function cuentas({ lineas, premio, pago, entrega, cfg }) {
+// clubPct: % del Club Américas si a este pedido le toca el premio (0 si no).
+export function cuentas({ lineas, premio, pago, entrega, cfg, clubPct = 0 }) {
   let sub = 0, lista = 0;
   const porCat = {};
   lineas.forEach((l) => {
@@ -83,11 +84,12 @@ export function cuentas({ lineas, premio, pago, entrega, cfg }) {
     else if (premio.tipo === 'Envío gratis') envioGratis = true;
     else if (premio.tipo === 'Regalo') regalo = premio.texto;
   }
+  const dClub = clubPct > 0 ? Math.round((sub - dPremio) * Math.min(clubPct, 50) / 100) : 0;
   const pp = pctPago(cfg.descPagoMap, pago);
-  const dPago = Math.round((sub - dPremio) * pp / 100);
+  const dPago = Math.round((sub - dPremio - dClub) * pp / 100);
   let envio = 0;
   if (entrega === 'Envío') envio = envioGratis || (cfg.envioGratisDesde > 0 && sub >= cfg.envioGratisDesde) ? 0 : Number(cfg.costoEnvio) || 0;
-  return { sub, ahorro: lista - sub, dPremio, pp, dPago, envio, total: sub - dPremio - dPago + envio, falta, sinCat, envioGratis, regalo };
+  return { sub, ahorro: lista - sub, dPremio, dClub, pp, dPago, envio, total: sub - dPremio - dClub - dPago + envio, falta, sinCat, envioGratis, regalo };
 }
 
 export function telWA(tel) {

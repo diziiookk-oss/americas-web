@@ -51,7 +51,7 @@
   .dir b { color: var(--txt); font-weight: 700; display: block; }
   .rb { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line2); background: var(--inp); color: var(--txt); display: grid; place-items: center; cursor: pointer; position: relative; transition: .2s; }
   .rb:hover { border-color: var(--red); }
-  .rb b { position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff; font: 800 11px/1 Inter; min-width: 21px; height: 21px; border-radius: 11px; display: grid; place-items: center; padding: 0 5px; box-shadow: 0 0 0 3px var(--bg); }
+  .rb b { position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff; font: 800 11px/1 var(--hf); min-width: 21px; height: 21px; border-radius: 11px; display: grid; place-items: center; padding: 0 5px; box-shadow: 0 0 0 3px var(--bg); }
   .rb b:empty { display: none; }
   .bump { animation: bump .4s; } @keyframes bump { 40% { transform: scale(1.2); } }
   .busca.mob { display: block; padding-bottom: 12px; }
@@ -89,7 +89,7 @@
   .orb.o2 { inset: 16%; border-color: rgba(227,36,43,.25); }
   .estrella { position: absolute; inset: 22%; filter: drop-shadow(0 0 40px rgba(227,36,43,.8)); animation: late 4s ease-in-out infinite; }
   @keyframes late { 50% { transform: scale(1.05); filter: drop-shadow(0 0 60px rgba(227,36,43,.95)); } }
-  .chipf { position: absolute; background: rgba(20,20,23,.9); border: 1px solid var(--line2); border-radius: 99px; padding: 6px 11px; font: 700 11px/1 Inter; display: none; align-items: center; gap: 6px; white-space: nowrap; animation: flota 5s ease-in-out infinite; }
+  .chipf { position: absolute; background: rgba(20,20,23,.9); border: 1px solid var(--line2); border-radius: 99px; padding: 6px 11px; font: 700 11px/1 var(--hf); display: none; align-items: center; gap: 6px; white-space: nowrap; animation: flota 5s ease-in-out infinite; }
   .chipf i { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); }
   @media (min-width: 900px) { .chipf { display: inline-flex; } }
   @keyframes flota { 50% { transform: translateY(-6px); } }
@@ -116,7 +116,7 @@
   /* secciones */
   .sec { margin: 30px 0 12px; display: flex; align-items: flex-end; gap: 10px; }
   .sec h3 { margin: 0; font: 900 22px/1.05 var(--hf); text-transform: uppercase; letter-spacing: -.3px; }
-  .sec h3 small { display: block; font: 600 12.5px/1.3 Inter; color: var(--mute); text-transform: none; letter-spacing: 0; margin-top: 4px; }
+  .sec h3 small { display: block; font: 500 12.5px/1.3 var(--hf); color: var(--mute); text-transform: none; letter-spacing: 0; margin-top: 4px; }
   .sec a { margin-left: auto; color: var(--red2); font: 800 12px/1 var(--hf); letter-spacing: 1px; text-transform: uppercase; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
 
   /* categorías: fila compacta que se desliza (celu) / grilla chica (compu) */
@@ -361,7 +361,7 @@
   .admtop { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .adm .tabs { display: flex; margin-bottom: 14px; }
   .adm .tab { flex: 1 1 0; min-width: 0; }
-  .nb { position: absolute; top: 2px; right: 8px; background: var(--red); color: #fff; font: 800 10px/1 Inter; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
+  .nb { position: absolute; top: 2px; right: 8px; background: var(--red); color: #fff; font: 800 10px/1 var(--hf); min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 4px; }
   .kps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   @media (min-width: 900px) { .kps { grid-template-columns: repeat(4, 1fr); } }
   .kp { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
@@ -581,3 +581,15 @@
   .vend .hero h1.h2s { font-size: 32px; }
   @media (min-width: 900px) { .vend .hero h1.h2s { font-size: 48px; } }
   .pasos3 b { font-weight: 800; }
+  /* Club Américas: tarjeta de sellos */
+  .clubc { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-top: 10px; }
+  .clubc > b { display: block; font-weight: 800; letter-spacing: -.015em; } .clubc > span { font-size: 13.5px; color: var(--txt2); }
+  .clubc.toca { border: 2px solid var(--ok); background: rgba(19,138,73,.06); }
+  .sellos { display: flex; gap: 8px; margin-top: 10px; }
+  .sellos i { width: 34px; height: 34px; border-radius: 50%; border: 2px dashed var(--line2); display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: 14px; color: #fff; }
+  .sellos i.on { background: var(--red); border: 2px solid var(--red); }
+  .sellos i.pz { border: 2px solid var(--gold); color: #7a5200; background: #fff6df; }
+  .clubpag .tarjeta { background: #111; color: #fff; border-radius: 22px; padding: 22px; position: relative; overflow: hidden; }
+  .clubpag .tarjeta::after { content: '★'; position: absolute; right: -10px; top: -30px; font-size: 160px; color: rgba(215,25,32,.25); }
+  .clubpag .tarjeta .sellos i { border-color: rgba(255,255,255,.35); }
+  .clubpag .tarjeta .sellos i.pz { background: transparent; color: var(--gold); border-color: var(--gold); }
