@@ -146,25 +146,22 @@ function Carrito({ onListo }) {
   const router = useRouter();
   const [fx, setFx] = useState(() => ({ nombre: '', tel: '', entrega: 'Retiro', direccion: '', pago: '', nota: '', ...(leer(K.yo, {}) || {}) }));
   const [enviando, setEnviando] = useState(false);
-  // Club Américas: con el WhatsApp escrito, vemos cuántas compras lleva y si esta tiene premio
-  const [club, setClub] = useState(null), [uniendo, setUniendo] = useState(false);
-  const telClub = String(fx.tel || '').replace(/\D/g, '').slice(-10);
+  // Club Américas: si el cliente entró con su cuenta, vemos sus sellos y si esta compra tiene premio
+  const [club, setClub] = useState(null), [clubListo, setClubListo] = useState(false);
   useEffect(() => {
-    if (telClub.length < 10) { setClub(null); return; }
-    const t = setTimeout(() => api('club', { tel: telClub }).then((r) => setClub(r && r.ok && r.activo ? r : null)), 400);
-    return () => clearTimeout(t);
-  }, [telClub]);
+    api('miClub').then((r) => {
+      setClubListo(true);
+      if (r && r.ok && r.activo) { setClub(r); setFx((x) => ({ ...x, nombre: x.nombre || r.nombre, tel: x.tel || r.tel })); }
+    });
+  }, []);
+  const telClub = String(fx.tel || '').replace(/\D/g, '').slice(-10);
+  const clubDeEste = club && club.tel === telClub;   // el descuento va con el WhatsApp de la cuenta
   const pagos = cfg.pagos.length ? cfg.pagos : ['Efectivo'];
   const f = { ...fx, pago: pagos.includes(fx.pago) ? fx.pago : pagos[0], entrega: fx.entrega === 'Envío' && cfg.envio ? 'Envío' : 'Retiro' };
   const set = (k, v) => setFx((x) => ({ ...x, [k]: v }));
   const lineas = Object.values(carrito).map((l) => ({ ...l, enc: !l.p.hay || (l.p.max !== null && l.c > l.p.max) }));
   if (!lineas.length) return <><h3>Tu pedido<button className="x" onClick={cerrar}><Ic n="x" cl="s" /></button></h3><div className="vacio" style={{ padding: '30px 0' }}>Todavía no agregaste productos.<br /><br /><button className="btn r" onClick={() => { cerrar(); router.push('/productos'); }}>Ver productos</button></div></>;
-  const C = cuentas({ lineas, premio: premio?.codigo ? premio : null, pago: f.pago, entrega: f.entrega, cfg, clubPct: club?.toca ? club.pct : 0 });
-  const unirme = async () => {
-    if (f.nombre.trim().length < 2) return toast('Escribí tu nombre arriba para sumarte.', true);
-    setUniendo(true); const r = await api('unirme', { nombre: f.nombre, tel: f.tel }); setUniendo(false);
-    toast(r.msg, !r.ok); if (r.ok) { const e = await api('club', { tel: telClub }); setClub(e && e.ok ? e : null); ev('club', 'unirme carrito'); }
-  };
+  const C = cuentas({ lineas, premio: premio?.codigo ? premio : null, pago: f.pago, entrega: f.entrega, cfg, clubPct: clubDeEste && club.toca ? club.pct : 0 });
   const usar = premio?.codigo && !C.falta && !C.sinCat && !(C.envioGratis && f.entrega !== 'Envío');
 
   async function enviar() {
@@ -237,13 +234,13 @@ function Carrito({ onListo }) {
     {cfg.minimo > 0 && C.sub < cfg.minimo && <div className="aviso">El pedido mínimo es {plata(cfg.minimo)}.</div>}
     <label className="campo">Tu nombre</label><input className="inp" autoComplete="name" value={f.nombre} onChange={(e) => set('nombre', e.target.value)} placeholder="Nombre y apellido" />
     <label className="campo">Tu WhatsApp</label><input className="inp" type="tel" inputMode="tel" autoComplete="tel" value={f.tel} onChange={(e) => set('tel', e.target.value)} placeholder="Ej. 343 4123456" />
-    {club && <div className={'clubc' + (club.toca ? ' toca' : '')}>
+    {club && clubDeEste && <div className={'clubc' + (club.toca ? ' toca' : '')}>
       {club.toca ? <><b>🎉 ¡Esta es tu compra con premio del Club!</b><span>Tenés <b>{club.pct}% OFF</b> en este pedido. Ya está descontado.</span></>
-        : club.registrado ? <><b>⭐ Club Américas</b><span>Llevás {club.progreso} de {club.cada - 1} compras. {club.faltan > 0 ? 'Te faltan ' + club.faltan + ' para tu ' + club.pct + '% OFF.' : '¡La próxima tiene ' + club.pct + '% OFF!'}</span></>
-        : <><b>⭐ Sumate gratis al Club Américas</b><span>Cada {club.cada} compras tenés <b>{club.pct}% OFF</b>. Solo con tu nombre y WhatsApp.</span></>}
+        : <><b>⭐ Club Américas · {String(club.nombre).split(' ')[0]}</b><span>Llevás {club.progreso} de {club.cada - 1} compras. {club.faltan > 0 ? 'Te faltan ' + club.faltan + ' para tu ' + club.pct + '% OFF.' : '¡La próxima tiene ' + club.pct + '% OFF!'}</span></>}
       <div className="sellos">{Array.from({ length: club.cada }).map((_, i) => <i key={i} className={i < club.progreso ? 'on' : i === club.cada - 1 ? 'pz' : ''}>{i === club.cada - 1 ? '%' : i < club.progreso ? '✓' : ''}</i>)}</div>
-      {!club.registrado && <button className="btn r" style={{ marginTop: 8, padding: '10px 14px', fontSize: 13 }} disabled={uniendo} onClick={unirme}>{uniendo ? 'Un momento…' : 'Sumarme al Club'}</button>}
     </div>}
+    {club && !clubDeEste && telClub.length >= 10 && <div className="aviso y">⭐ El descuento del Club va con el WhatsApp de tu cuenta ({club.tel}). Con otro número esta compra no suma.</div>}
+    {clubListo && !club && cfg.envio !== undefined && <a className="clubc" href="/club" style={{ display: 'block' }}><b>⭐ ¿Sos del Club Américas?</b><span>Entrá con tu cuenta para sumar esta compra, o creala gratis: cada 5 compras tenés 15% OFF. Tu carrito queda guardado.</span></a>}
     {f.entrega === 'Envío' && <><label className="campo">Dirección de entrega</label><input className="inp" autoComplete="street-address" value={f.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Calle, número, piso / referencia" /></>}
     <label className="campo">¿Algo más? (opcional)</label><textarea className="inp" rows={2} value={f.nota} onChange={(e) => set('nota', e.target.value)} placeholder="Ej. que la banana no esté muy madura" />
     <button className="btn w blk" style={{ marginTop: 16 }} onClick={enviar} disabled={enviando || !cfg.abierta || (cfg.minimo > 0 && C.sub < cfg.minimo)}>

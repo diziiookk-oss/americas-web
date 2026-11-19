@@ -144,10 +144,10 @@ function Pedidos({ avisar, setNuevos }) {
     ult.current = r.nuevos; setNuevos(r.nuevos); setD(r);
   }, [avisar, setNuevos]);
   useEffect(() => { cargar(); const t = setInterval(cargar, 30000); return () => clearInterval(t); }, [cargar]);
+  const [aviso, setAviso] = useState({}), [q, setQ] = useState('');   // hooks siempre antes de cualquier return
   if (!d) return <div className="sk" style={{ height: 200 }} />;
   const act = (p) => p.estado !== 'Entregado' && p.estado !== 'Cancelado';
   const L = d.pedidos.filter((p) => f === 'Todos' || (f === 'Activos' ? act(p) : p.estado === f));
-  const [aviso, setAviso] = useState({}), [q, setQ] = useState('');
   const cambiar = async (p, e) => { const r = await A('estado', { nro: p.nro, estado: e }); if (!r.ok) return avisar(r.msg, true); setD(r); setNuevos(r.nuevos); ult.current = r.nuevos;
     avisar('Pedido ' + p.nro + ': ' + e); if (e !== 'Nuevo') setAviso((a) => ({ ...a, [p.nro]: e })); };
   const qq = q.trim().toLowerCase().replace(/^p-?/, '');

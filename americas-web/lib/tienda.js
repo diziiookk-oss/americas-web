@@ -43,7 +43,7 @@ export async function girar(dispositivo) {
 function pub(x) { return { texto: x.texto, tipo: x.tipo, valor: Number(x.valor) || 0, minimo: Number(x.minimo) || 0, categoria: x.categoria || '' }; }
 
 /* ------------------------------------------------------------------ pedidos */
-export async function crearPedido(ped) {
+export async function crearPedido(ped, telSesion) {
   const cfg = await getConfig();
   if (!cfg.abierta) return { ok: false, msg: cfg.msgCerrada };
   const nombre = corto(ped?.nombre, 60).replace(/\s+/g, ' ');
@@ -87,6 +87,7 @@ export async function crearPedido(ped) {
     if (pz) premio = { texto: pz.texto, tipo: pz.tipo, valor: Number(pz.valor), minimo: Number(pz.minimo), categoria: pz.categoria || '' };
   }
   const club = await estadoClub(tel, s);   // Club Américas: ¿esta es su compra con premio?
+  if (String(telSesion || '').slice(-10) !== String(tel).slice(-10)) club.toca = false;   // solo con la sesión del dueño de la cuenta
   const C = cuentas({ lineas, premio, pago, entrega: envio ? 'Envío' : 'Retiro', cfg, clubPct: club.toca ? club.pct : 0 });
   if (cfg.minimo > 0 && C.sub < cfg.minimo) return { ok: false, msg: 'El pedido mínimo es ' + plata(cfg.minimo) + '.' };
   if (premio && C.sinCat) return { ok: false, msg: 'Tu premio "' + premio.texto + '" es para productos de ' + premio.categoria + '. Agregá alguno o sacá el premio.' };

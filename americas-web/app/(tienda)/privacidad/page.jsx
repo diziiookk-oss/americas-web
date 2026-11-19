@@ -15,7 +15,7 @@ export default async function Privacidad() {
     <h2>1. Qué datos guardamos</h2>
     <ul>
       <li><b>Cuando hacés un pedido:</b> tu nombre, tu WhatsApp, la dirección de entrega (si pedís envío), lo que compraste, el medio de pago elegido y las notas que agregues.</li>
-      <li><b>Si te sumás al Club Américas</b> (opcional): tu nombre, tu WhatsApp, tu cumpleaños (si lo cargás) y si aceptás recibir ofertas.</li>
+      <li><b>Si creás tu cuenta del Club Américas</b> (opcional): tu nombre, tu WhatsApp, tu contraseña (guardada cifrada), tu cumpleaños (si lo cargás) y si aceptás recibir ofertas.</li>
       <li><b>Si sos revendedor:</b> tu nombre, tu WhatsApp, tu contraseña (guardada cifrada: nadie puede leerla, ni siquiera nosotros), tu alias o CBU para pagarte y tus ventas.</li>
       <li><b>Navegación:</b> estadísticas anónimas de uso de la tienda (qué páginas se visitan, qué se busca). No usamos tu nombre para esto.</li>
     </ul>
