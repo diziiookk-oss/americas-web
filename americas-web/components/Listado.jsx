@@ -17,7 +17,7 @@ export default function Listado({ titulo, sub, L, cats, catActual, base, orden, 
   const vista = ordenar(L, orden).slice((pag - 1) * POR_PAG, pag * POR_PAG);
   const qs = (o) => { const p = new URLSearchParams(); if (q) p.set('q', q); if (o.orden ?? orden) p.set('orden', o.orden ?? orden); if (o.pagina > 1) p.set('pagina', o.pagina); const s = p.toString(); return s ? '?' + s : ''; };
   return (<>
-    <div className="sec" style={{ marginTop: 16 }}><h1 className="h1pag">{titulo}<small style={{ display: 'block', font: '600 12.5px/1.3 Inter', color: 'var(--mute)', textTransform: 'none', letterSpacing: 0, marginTop: 4 }}>{sub}</small></h1></div>
+    <div className="sec" style={{ marginTop: 16 }}><h1 className="h1pag">{titulo}<small style={{ display: 'block', font: '600 12.5px/1.3 var(--hf)', color: 'var(--mute)', textTransform: 'none', letterSpacing: 0, marginTop: 4 }}>{sub}</small></h1></div>
     {cats && <nav className="chips" aria-label="Categorías"><Link className={'chip' + (!catActual ? ' on' : '')} href="/productos">Todas</Link>{cats.map((k) => <Link key={k.slug} className={'chip' + (catActual === k.slug ? ' on' : '')} href={'/categoria/' + k.slug}>{k.nombre}</Link>)}</nav>}
     <div className="orden"><span>{L.length} productos</span><OrdenSelect valor={orden || 'pop'} /></div>
     {L.length ? <div className="grid">{vista.map((p) => <Tarjeta key={p.id} p={paraCliente(p)} />)}</div> : vacio}

@@ -15,7 +15,7 @@ export default async function Nosotros() {
       <span className="kicker">★ Sobre nosotros</span>
       <h1 className="h" style={{ fontSize: 32, lineHeight: 1.05, margin: '16px 0 10px' }}>{c.negocio}</h1>
       <p style={{ color: 'var(--txt2)', fontSize: 16 }}>{c.nosotros}</p>
-      {c.serviciosLista.length > 0 && <><b style={{ font: '800 12px/1 var(--hf)', letterSpacing: 1, textTransform: 'uppercase', color: 'var(--mute)' }}>Servicios en el local</b>
+      {c.serviciosLista.length > 0 && <><b style={{ font: '800 12px/1 var(--hf)', letterSpacing: 1, color: 'var(--mute)' }}>Servicios en el local</b>
         <div className="serv">{c.serviciosLista.map((s) => <span key={s}>{s}</span>)}</div></>}
       {c.direccion && <iframe title="Mapa" src={emb} loading="lazy" style={{ width: '100%', height: 240, border: 0, borderRadius: 16, marginTop: 18, filter: 'grayscale(.3) invert(.92) hue-rotate(180deg)' }} />}
     </div>

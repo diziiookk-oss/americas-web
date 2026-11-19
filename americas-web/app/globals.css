@@ -302,7 +302,7 @@
   .sm .th { width: 100%; height: 76px; background: #fff; border-radius: 10px; display: grid; place-items: center; overflow: hidden; }
   .sm .th img { width: 70%; height: 80%; object-fit: contain; mix-blend-mode: multiply; }
   .sm .nm { font-size: 12px; font-weight: 600; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 29px; }
-  .sm .pz { font: 800 13px/1 var(--hf); } .sm .pz s { color: var(--mute); font: 500 10.5px Inter; margin-left: 4px; }
+  .sm .pz { font: 800 13px/1 var(--hf); } .sm .pz s { color: var(--mute); font: 500 10.5px var(--hf); margin-left: 4px; }
   .sm .mas { background: var(--redbg); color: var(--red2); border: 1px solid rgba(227,36,43,.4); border-radius: 9px; padding: 6px; text-align: center; font: 800 11px/1 var(--hf); text-transform: uppercase; letter-spacing: .4px; }
   .sm:active .mas { background: var(--red); color: #fff; }
   .tots { margin: 14px 0 4px; }
@@ -530,3 +530,54 @@
   .pasos3 div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center; }
   .pasos3 b { display: grid; place-items: center; width: 30px; height: 30px; margin: 0 auto 6px; border-radius: 50%; background: var(--red); color: #fff; font: 700 15px/1 var(--hf); }
   .pasos3 span { font-size: 12.5px; color: var(--txt2); }
+
+  /* ================================================================
+     TIPOGRAFÍA: Plus Jakarta Sans en todo. Títulos en minúscula normal
+     (más amables y fáciles de leer); mayúsculas solo en etiquetas chicas.
+     ================================================================ */
+  :root, .tema-oscuro { --hf: "Plus Jakarta Sans", Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  html, body { font-family: var(--hf); font-size: 15px; letter-spacing: -.005em; }
+  button, input, select, textarea { font-family: var(--hf); }
+
+  .slide h2, .slide .h2s, .vend .hero h1.h2s { text-transform: none; font-weight: 800; letter-spacing: -.035em; line-height: 1.04; }
+  @media (max-width: 899px) { .slide h2, .slide .h2s { font-size: 33px !important; } }
+  @media (min-width: 900px) { .slide h2, .slide .h2s { font-size: 56px; } }
+  .sec h3, .h1pag { text-transform: none; font-weight: 800; letter-spacing: -.025em; font-size: 23px; }
+  .sec h3 small, .h1pag small { letter-spacing: 0; font-weight: 500; }
+  .sec a { text-transform: none; letter-spacing: -.005em; font-weight: 700; font-size: 14px; }
+  .det h1 { text-transform: none; font-weight: 800; letter-spacing: -.03em; font-size: 30px; }
+  .precio b, .prod .pr b, .tots .T, .ptot, .kp .v { font-weight: 800; letter-spacing: -.03em; }
+  .prod .pr b { font-size: 20px; }
+  .prod .n { font-weight: 600; letter-spacing: -.01em; }
+
+  .btn, .add, .barra .v, .sm .mas { text-transform: none; letter-spacing: -.005em; font-weight: 700; font-family: var(--hf); }
+  .btn { font-size: 14.5px; } .add { font-size: 14px; } .sm .mas { font-size: 12px; }
+  .tab { text-transform: none; font-weight: 600; letter-spacing: -.005em; font-size: 11.5px; }
+  @media (min-width: 900px) { .tab { font-size: 14px; } }
+  .chip { text-transform: none; font-weight: 600; letter-spacing: -.005em; font-size: 13.5px; }
+  .cat b { text-transform: none; font-weight: 700; letter-spacing: -.01em; font-size: 12.5px; }
+  .cat span { text-transform: none; font-weight: 500; letter-spacing: 0; font-size: 11px; }
+  .hoja h3, .modal h3 { text-transform: none; font-weight: 800; letter-spacing: -.025em; }
+  .seg button { font-weight: 600; }
+  .estado { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 12px; }
+  .pocas { text-transform: none; letter-spacing: -.005em; font-weight: 700; }
+  .bdg, .bdg2, .bdg3, .etq { font-family: var(--hf); font-weight: 800; letter-spacing: .02em; }
+  .bf b { font-weight: 700; } .caja b { font-weight: 700; }
+  footer b { text-transform: none; letter-spacing: -.005em; font-weight: 700; font-size: 14px; }
+  .marquee span { font-weight: 700; letter-spacing: .08em; font-size: 11.5px; }
+  .kicker { font-weight: 700; letter-spacing: .14em; font-size: 11px; }
+  .migas { text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12.5px; }
+  .paso { text-transform: none; letter-spacing: 0; font-weight: 600; }
+
+  /* panel */
+  .adh1 { text-transform: none; font-weight: 800; letter-spacing: -.035em; font-size: 30px; }
+  @media (min-width: 900px) { .adh1 { font-size: 36px; } }
+  .adi { text-transform: none; letter-spacing: -.005em; font-weight: 600; font-size: 14.5px; }
+  .adbottom .adi { font-size: 11px; font-weight: 600; letter-spacing: 0; }
+  .adgrupo { letter-spacing: .14em; font-weight: 700; }
+  .saludo b, .abierta b, .tarea b, .pnom { text-transform: none; font-weight: 800; letter-spacing: -.025em; }
+  .abierta em, .est { text-transform: none; letter-spacing: 0; font-weight: 700; font-size: 12px; }
+  .kp .l { font-weight: 600; }
+  .vend .hero h1.h2s { font-size: 32px; }
+  @media (min-width: 900px) { .vend .hero h1.h2s { font-size: 48px; } }
+  .pasos3 b { font-weight: 800; }

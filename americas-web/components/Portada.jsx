@@ -47,6 +47,6 @@ export function RuletaCTA() {
   if (premio || !cfg.ruleta || premios.length < 2) return null;
   return (<><div className="sec" /><div className="caja" style={{ cursor: 'pointer', borderColor: 'rgba(227,36,43,.45)', padding: 16 }} onClick={abrirRuleta}>
     <div className="ic" style={{ width: 48, height: 48 }}><Ic n="wheel" cl="l" /></div>
-    <div style={{ flex: 1 }}><b style={{ font: '900 17px/1.1 var(--hf)', textTransform: 'uppercase' }}>Girá la ruleta</b><br /><span className="muted">Ganá descuentos para esta compra</span></div>
+    <div style={{ flex: 1 }}><b style={{ font: '800 17px/1.1 var(--hf)' }}>Girá la ruleta</b><br /><span className="muted">Ganá descuentos para esta compra</span></div>
     <span className="btn r" style={{ padding: '12px 16px' }}>Girar</span></div></>);
 }
