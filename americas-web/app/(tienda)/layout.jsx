@@ -1,5 +1,13 @@
-import { getConfig, getPremiosPublicos, configPublica } from '@/lib/datos';
-import { pagoMax, plata } from '@/lib/precios';
+import { getConfig, getPremiosPublicos, configPublica, getProductos, paraCliente } from '@/lib/datos';
+import { pagoMax, plata, precioUnit, esOferta } from '@/lib/precios';
+
+// "Sumá a tu pedido": productos baratos, con foto y en stock, para agregar con un toque desde el carrito
+// (el order bump de una tienda: sube el ticket promedio sin esfuerzo para el cliente).
+function sugeridosDe(L) {
+  const cand = L.filter((p) => p.hay && p.unidad === 'un' && p.img && precioUnit(p) > 0 && precioUnit(p) <= 4000);
+  cand.sort((a, b) => (Number(esOferta(b)) - Number(esOferta(a))) || (Number(b.destacado) - Number(a.destacado)) || b.pop - a.pop);
+  return cand.slice(0, 12).map(paraCliente);
+}
 import { TiendaProvider } from '@/components/Tienda';
 import Cabecera from '@/components/Cabecera';
 import Pie from '@/components/Pie';
@@ -18,8 +26,8 @@ function Marquesina({ c }) {
 }
 
 export default async function LayoutTienda({ children }) {
-  let c, premios;
-  try { c = await getConfig(); premios = await getPremiosPublicos(); }
+  let c, premios, sugeridos = [];
+  try { c = await getConfig(); premios = await getPremiosPublicos(); try { sugeridos = sugeridosDe(await getProductos()); } catch {} }
   catch (e) {
     return <main className="wrap"><div className="vacio"><h1 className="h">Américas Drugstore</h1>La página todavía no está conectada a la base de datos.<br /><small>{String(e.message || e)}</small></div></main>;
   }
@@ -35,7 +43,7 @@ export default async function LayoutTienda({ children }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
-        <TiendaProvider cfg={pub} premios={premios}>
+        <TiendaProvider cfg={pub} premios={premios} sugeridos={sugeridos}>
           <Marquesina c={c} />
           <Cabecera direccion={c.direccion} />
           <main className="wrap">{!c.abierta && <div className="cerrado">{c.msgCerrada}</div>}{children}</main>

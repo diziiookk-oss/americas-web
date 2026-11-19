@@ -33,7 +33,7 @@ function confeti(n) {
 
 const NOMBRE_VISTA = { '/': 'inicio', '/productos': 'productos', '/ofertas': 'ofertas', '/mis-pedidos': 'pedidos', '/nosotros': 'nosotros' };
 
-export function TiendaProvider({ cfg, premios, children }) {
+export function TiendaProvider({ cfg, premios, sugeridos = [], children }) {
   const [carrito, setCarrito] = useState({});
   const [premio, setPremio] = useState(null);
   const [hoja, setHoja] = useState(null);
@@ -108,7 +108,7 @@ export function TiendaProvider({ cfg, premios, children }) {
   }, [carrito, cfg.encargar, fijarCant, toast]);
   const fijarPremio = (pz) => { setPremio(pz); guardar(K.premio, pz); };
 
-  const valor = { cfg, premios, carrito, premio, sumar, fijarCant, fijarPremio, ev, toast, abrirCarrito: () => setHoja({ tipo: 'carrito' }), abrirRuleta: () => { ev('ruleta', 'abrir'); setModal('ruleta'); },
+  const valor = { cfg, premios, sugeridos, carrito, premio, sumar, fijarCant, fijarPremio, ev, toast, abrirCarrito: () => setHoja({ tipo: 'carrito' }), abrirRuleta: () => { ev('ruleta', 'abrir'); setModal('ruleta'); },
     abrirAvisame: (p) => setHoja({ tipo: 'avisame', p }), cerrar: () => { setHoja(null); setModal(null); }, dispositivo: () => ids.current.dev, cargado };
 
   const lineas = Object.values(carrito);
@@ -119,7 +119,7 @@ export function TiendaProvider({ cfg, premios, children }) {
   return (
     <Ctx.Provider value={valor}>
       {children}
-      <div className={'barra' + (barra ? ' on' : '')} onClick={() => setHoja({ tipo: 'carrito' })}><div className="t"><small>{n} {n === 1 ? 'producto' : 'productos'}{lista - sub > 0 ? ' · ahorrás ' + plata(lista - sub) : ''}</small><b>{plata(sub)}</b></div><div className="v">Ver pedido →</div></div>
+      <div className={'barra' + (barra ? ' on' : '')} onClick={() => setHoja({ tipo: 'carrito' })}><div className="t"><small>{n} {n === 1 ? 'producto' : 'productos'}{lista - sub > 0 ? ' · ahorrás ' + plata(lista - sub) : ''}{cfg.envio && cfg.envioGratisDesde > 0 ? (sub >= cfg.envioGratisDesde ? ' · 🛵 envío gratis' : ' · faltan ' + plata(cfg.envioGratisDesde - sub) + ' p/ envío gratis') : ''}</small><b>{plata(sub)}</b></div><div className="v">Ver pedido →</div></div>
       {cfg.whatsapp && <a className={'waf' + (barra ? ' up' : '')} href={'https://wa.me/' + cfg.whatsapp + '?text=' + encodeURIComponent('¡Hola! Tengo una consulta 😊')} target="_blank" rel="noopener" aria-label="WhatsApp" onClick={() => ev('whatsapp', 'flotante')}><WaLogo /></a>}
       {premio?.codigo && <div className={'ppill' + (barra ? ' up' : '')} onClick={() => setModal('premio')}><div className="ic"><Ic n="gift" cl="s" /></div><span>Tu premio: <b>{premio.texto}</b>{premio.categoria ? ' en ' + premio.categoria : ''}{premio.vence ? ' · hasta el ' + fechaCorta(premio.vence) : ''}</span></div>}
       <div className={'velo' + (abierto ? ' on' : '')} onClick={() => { setHoja(null); setModal(null); }} />
@@ -139,7 +139,7 @@ export function WaLogo({ size = 30 }) {
 
 /* ------------------------------------------------------------------ carrito */
 function Carrito({ onListo }) {
-  const { cfg, carrito, premio, sumar, fijarPremio, cerrar, toast, abrirRuleta, premios } = useTienda();
+  const { cfg, carrito, premio, sumar, fijarPremio, cerrar, toast, abrirRuleta, premios, sugeridos, ev } = useTienda();
   const router = useRouter();
   const [fx, setFx] = useState(() => ({ nombre: '', tel: '', entrega: 'Retiro', direccion: '', pago: '', nota: '', ...(leer(K.yo, {}) || {}) }));
   const [enviando, setEnviando] = useState(false);
@@ -168,8 +168,14 @@ function Carrito({ onListo }) {
     onListo(r); confeti(80);
   }
 
+  const meta = cfg.envio ? Number(cfg.envioGratisDesde) || 0 : 0;
+  const sumables = (sugeridos || []).filter((p) => !carrito[p.id]).slice(0, 8);
   return (<>
     <h3>Tu pedido<button className="x" onClick={cerrar}><Ic n="x" cl="s" /></button></h3>
+    {meta > 0 && <div className="meta">
+      <div className="mt">{C.sub >= meta ? <>🎉 <b>¡Tenés envío gratis!</b></> : <>🛵 Te faltan <b>{plata(meta - C.sub)}</b> para el <b>envío gratis</b></>}</div>
+      <div className="bar"><i style={{ width: Math.min(100, Math.round(C.sub / meta * 100)) + '%' }} /></div>
+    </div>}
     {lineas.map((l) => (
       <div className="lin" key={l.p.id}>
         {l.p.img ? <div className="th"><img src={l.p.img} alt="" referrerPolicy="no-referrer" /></div> : <div className="th nofoto">{iniciales(l.p.nombre)}</div>}
@@ -179,6 +185,18 @@ function Carrito({ onListo }) {
           : <div className="st"><button onClick={() => sumar(l.p, -1)}>−</button><span>{l.c}</span><button onClick={() => sumar(l.p, 1)}>+</button></div>}
         <div className="tot">{plata(l.pr.total)}</div>
       </div>))}
+    {sumables.length > 0 && <>
+      <label className="campo" style={{ marginTop: 14 }}>⚡ Sumá a tu pedido <span style={{ color: 'var(--mute)', fontWeight: 500 }}>· lo que más se lleva junto</span></label>
+      <div className="sumar">{sumables.map((p) => {
+        const of = p.oferta != null && Number(p.oferta) > 0 && Number(p.oferta) < Number(p.precio);
+        return (<button key={p.id} className="sm" onClick={() => { sumar(p, 1); ev('bump', p.nombre); }}>
+          <div className="th"><img src={p.img} alt="" referrerPolicy="no-referrer" loading="lazy" /></div>
+          <span className="nm">{p.nombre}</span>
+          <span className="pz">{plata(precioUnit(p))}{of && <s>{plata(p.precio)}</s>}</span>
+          <span className="mas">+ Sumar</span>
+        </button>);
+      })}</div>
+    </>}
     <label className="campo">¿Cómo lo querés?</label>
     <div className="seg"><button className={f.entrega === 'Retiro' ? 'on' : ''} onClick={() => set('entrega', 'Retiro')}>🏪 Retiro en el local</button>{cfg.envio && <button className={f.entrega === 'Envío' ? 'on' : ''} onClick={() => set('entrega', 'Envío')}>🛵 Envío{cfg.zona ? ' (' + cfg.zona + ')' : ''}</button>}</div>
     <label className="campo">¿Cómo pagás?</label>
@@ -191,7 +209,6 @@ function Carrito({ onListo }) {
       {f.entrega === 'Envío' && <div><span>Envío</span><span>{C.envio ? plata(C.envio) : <b style={{ color: 'var(--ok)' }}>GRATIS</b>}</span></div>}
       <div className="T"><span>Total</span><span>{plata(C.total)}</span></div>
     </div>
-    {f.entrega === 'Envío' && C.envio > 0 && cfg.envioGratisDesde > C.sub && <div className="aviso y">🛵 Te faltan <b>{plata(cfg.envioGratisDesde - C.sub)}</b> para el envío gratis.</div>}
     {premio?.codigo ? <>
       {C.sinCat && <div className="aviso y">🎁 Tu premio <b>{premio.texto}</b> es para productos de {premio.categoria}.</div>}
       {!C.sinCat && C.falta > 0 && <div className="aviso y">🎁 Tu premio <b>{premio.texto}</b> se activa sumando {plata(C.falta)} más.</div>}

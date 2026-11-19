@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS eventos_fecha ON eventos (fecha);
 CREATE TABLE IF NOT EXISTS avisos (
   id serial PRIMARY KEY, fecha timestamptz DEFAULT now(), producto text, cliente text, telefono text, estado text DEFAULT 'Pendiente'
 );
+ALTER TABLE productos ADD COLUMN IF NOT EXISTS etiqueta text DEFAULT '';
 `;
 
 const PREMIOS_DEF = [

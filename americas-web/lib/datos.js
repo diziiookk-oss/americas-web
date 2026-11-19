@@ -70,7 +70,7 @@ function fila(r, cfg) {
     id: r.id, slug: r.slug, nombre: r.nombre, marca: r.marca || '', categoria: r.categoria || 'Otros', unidad: r.unidad === 'kg' ? 'kg' : 'un',
     precio: Number(r.precio), oferta: r.oferta === null ? null : Number(r.oferta), escalones: escalonesDe(r.escalones),
     img: r.img_web || r.img || '', hay: stock === null || stock > 0, max: stock === null ? null : Math.max(0, stock),
-    pop: r.pop || 0, descripcion: r.descripcion || '', destacado: !!r.destacado
+    pop: r.pop || 0, descripcion: r.descripcion || '', destacado: !!r.destacado, etiqueta: r.etiqueta || ''
   };
 }
 
@@ -112,7 +112,7 @@ export { esOferta, descDe };
 
 // Lo mínimo que necesita el carrito en el navegador.
 export function paraCliente(p) {
-  return { id: p.id, slug: p.slug, nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precio: p.precio, oferta: p.oferta, escalones: p.escalones, img: p.img, hay: p.hay, max: p.max };
+  return { id: p.id, slug: p.slug, nombre: p.nombre, categoria: p.categoria, unidad: p.unidad, precio: p.precio, oferta: p.oferta, escalones: p.escalones, img: p.img, hay: p.hay, max: p.max, etiqueta: p.etiqueta || '' };
 }
 
 // Config que puede ver cualquiera (sin claves).

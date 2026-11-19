@@ -29,15 +29,17 @@ export default async function Producto({ params }) {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
     <Registrar tipo="producto" detalle={p.nombre} />
     <div className="det">
-      <Foto p={p} cls="foto">{pct > 0 && <span className="bdg" style={{ left: 14, top: 14, fontSize: 12, padding: '8px 12px' }}>★ −{pct}% OFF</span>}</Foto>
+      <Foto p={p} cls="foto">{pct > 0 && <span className="bdg" style={{ left: 14, top: 14, fontSize: 12, padding: '8px 12px' }}>Ahorrás {plata(p.precio - precioUnit(p))}{p.unidad === 'kg' ? '/kg' : ''}</span>}
+        {p.etiqueta && <span className="etq" style={{ left: 14, top: pct > 0 ? 50 : 14, fontSize: 11 }}>{p.etiqueta}</span>}</Foto>
       <div>
         <nav className="migas" aria-label="Migas"><Link href="/">Inicio</Link>/<Link href={'/categoria/' + catSlug(p.categoria)}>{p.categoria}</Link>/<span style={{ color: 'var(--txt2)' }}>{p.nombre}</span></nav>
         <h1>{p.nombre}</h1>{p.marca && <div className="marca">{p.marca}</div>}
         <div className="precio"><b>{plata(precioUnit(p))}</b>{p.unidad === 'kg' && <small>el kg</small>}{pct > 0 && <s>{plata(p.precio)}</s>}</div>
+        {pct > 0 && <div className="ahorro">🔥 Comprando online <b>te ahorrás {plata(p.precio - precioUnit(p))}</b>{p.unidad === 'kg' ? ' por kg' : ''}</div>}
         {mp.pct > 0 && <div className="caja"><div className="ic"><Ic n="cash" cl="s" /></div><div><b>{plata(precioUnit(p) * (1 - mp.pct / 100))}{p.unidad === 'kg' ? '/kg' : ''}</b> pagando en {mp.txt} <b style={{ color: 'var(--red2)' }}>({mp.pct}% OFF)</b></div></div>}
         {p.escalones.length > 0 && <div className="caja ok"><div className="ic"><Ic n="star" cl="s" /></div><div><b>Descuento online por cantidad:</b> {p.escalones.map((x) => minTxt(p, x) + ' −' + x.pct + '%').join(' · ')}</div></div>}
         {p.descripcion && <p className="desc">{p.descripcion}</p>}
-        {p.hay ? <span className="estado si"><i />En stock{p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? ' · quedan ' + p.max : ''}</span>
+        {p.hay ? <span className={'estado ' + (p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? 'no' : 'si')}><i />{p.max !== null && p.max <= 5 && p.unidad !== 'kg' ? '¡Últimas ' + p.max + ' unidades!' : 'En stock · listo para llevar'}</span>
           : <><span className="estado no"><i />Sin stock por el momento</span><div className="muted" style={{ marginBottom: 8 }}>Podés encargarlo igual: lo sumás a tu pedido y coordinamos la entrega por WhatsApp cuando vuelva a ingresar.</div></>}
         <Acciones p={paraCliente(p)} />
         <div className="info2"><span><Ic n="shop" cl="s" />Retiro gratis{c.direccion ? ' en ' + c.direccion.split(',')[0] : ''}</span>{c.envio && <span><Ic n="moto" cl="s" />Envíos a domicilio{c.zona ? ' en ' + c.zona : ''}</span>}</div>

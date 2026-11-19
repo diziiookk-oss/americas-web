@@ -28,7 +28,7 @@ export async function POST(req, { params }) {
       case 'guardarPremios': r = await A.guardarPremios(b.premios); break;
       case 'avisos': r = { ok: true, avisos: await A.leerAvisos() }; break;
       case 'aviso': r = await A.marcarAviso(b.id, b.estado); break;
-      case 'productos': r = { ok: true, ...(await A.leerProductosAdmin(b.q)) }; break;
+      case 'productos': r = { ok: true, ...(await A.leerProductosAdmin(b.q, b.filtro)) }; break;
       case 'producto': r = await A.editarProducto(b); break;
       case 'categorias': r = { ok: true, categorias: await A.categorias() }; break;
       default: return NextResponse.json({ ok: false, msg: 'Acción desconocida.' }, { status: 404 });

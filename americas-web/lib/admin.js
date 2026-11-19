@@ -133,19 +133,34 @@ export async function marcarAviso(id, estado) {
   await s`UPDATE avisos SET estado = ${estado === 'Avisado' ? 'Avisado' : 'Pendiente'} WHERE id = ${Number(id) || 0}`;
   return { ok: true, avisos: await leerAvisos() };
 }
-export async function leerProductosAdmin(q) {
+// filtro: '' | 'sinFoto' | 'sinDesc' | 'destacados' | 'ocultos' | 'etiqueta'
+export async function leerProductosAdmin(q, filtro) {
   const s = await db();
   const like = '%' + String(q || '').trim() + '%';
-  const rows = await s`SELECT id, slug, nombre, categoria, unidad, precio, oferta, img, img_web, stock, activo, oculto, destacado, descripcion FROM productos
-    WHERE activo AND (${!q} OR nombre ILIKE ${like} OR id ILIKE ${like}) ORDER BY pop DESC, nombre LIMIT 120`;
+  const f = String(filtro || '');
+  const rows = await s`SELECT id, slug, nombre, categoria, unidad, precio, oferta, img, img_web, stock, activo, oculto, destacado, descripcion, etiqueta FROM productos
+    WHERE activo AND (${!q} OR nombre ILIKE ${like} OR id ILIKE ${like} OR categoria ILIKE ${like})
+      AND (${f !== 'sinFoto'} OR (img = '' AND img_web = ''))
+      AND (${f !== 'sinDesc'} OR coalesce(descripcion, '') = '')
+      AND (${f !== 'destacados'} OR destacado)
+      AND (${f !== 'ocultos'} OR oculto)
+      AND (${f !== 'etiqueta'} OR coalesce(etiqueta, '') <> '')
+    ORDER BY pop DESC, nombre LIMIT 200`;
   const [{ total, sinFoto }] = await s`SELECT count(*)::int AS total, count(*) FILTER (WHERE img = '' AND img_web = '')::int AS "sinFoto" FROM productos WHERE activo`;
   return { productos: rows.map((r) => ({ ...r, precio: Number(r.precio), oferta: r.oferta === null ? null : Number(r.oferta), stock: r.stock === null ? null : Number(r.stock) })), total, sinFoto };
 }
-export async function editarProducto({ id, oculto, img_web, descripcion, destacado }) {
+// Acepta links de Google Imágenes (…imgurl=…) y saca la foto real.
+function limpiarLinkFoto(u) {
+  let img = String(u || '').trim();
+  try { const x = new URL(img); const real = x.searchParams.get('imgurl') || x.searchParams.get('mediaurl') || x.searchParams.get('url'); if (real && /^https?:\/\//.test(real) && /google\.|bing\./.test(x.hostname)) img = real; } catch {}
+  return img;
+}
+export async function editarProducto({ id, oculto, img_web, descripcion, destacado, etiqueta }) {
   const s = await db();
-  const img = String(img_web || '').trim();
+  const img = limpiarLinkFoto(img_web);
   if (img && !/^https?:\/\//.test(img)) return { ok: false, msg: 'El link de la foto tiene que empezar con https://' };
-  await s`UPDATE productos SET oculto = ${!!oculto}, img_web = ${img.slice(0, 500)}, descripcion = ${String(descripcion || '').slice(0, 1500)}, destacado = ${!!destacado} WHERE id = ${id}`;
+  await s`UPDATE productos SET oculto = ${!!oculto}, img_web = ${img.slice(0, 500)}, descripcion = ${String(descripcion || '').slice(0, 1500)}, destacado = ${!!destacado},
+    etiqueta = ${String(etiqueta || '').trim().toUpperCase().slice(0, 22)} WHERE id = ${id}`;
   olvidar();
   return { ok: true, msg: 'Producto guardado.' };
 }

@@ -115,25 +115,101 @@ function Estadisticas() {
 }
 
 /* ------------------------------------------------------------------ productos */
+const ETIQUETAS = ['NUEVO', 'MÁS VENDIDO', 'PROMO', 'LIQUIDACIÓN', 'SIN TACC', 'SIN AZÚCAR', 'VEGANO', 'IMPERDIBLE', 'ÚLTIMOS'];
+const FILTROS_PROD = [['', 'Todos'], ['sinFoto', '📷 Sin foto'], ['sinDesc', '📝 Sin descripción'], ['destacados', '⭐ Destacados'], ['etiqueta', '🏷️ Con etiqueta'], ['ocultos', '🙈 Ocultos']];
+
+// Si pegás un link de Google Imágenes, saca la foto real (igual lo hace el servidor al guardar).
+function linkFoto(u) {
+  let s = String(u || '').trim();
+  try { const x = new URL(s); const r = x.searchParams.get('imgurl') || x.searchParams.get('mediaurl'); if (r) s = r; } catch {}
+  return s;
+}
+// Descripción base para arrancar (después se edita a mano).
+function plantillaDesc(p) {
+  const kg = p.unidad === 'kg';
+  return `${p.nombre}${kg ? ', suelto por peso: llevás la cantidad exacta que necesitás (100 g, 250 g, 1 kg o lo que quieras)' : ''}.\n\n` +
+    `✔ Producto ${String(p.categoria || '').toLowerCase()} de calidad, siempre fresco en Américas Drugstore.\n` +
+    `✔ Pedilo online en 2 minutos y retiralo en el local o recibilo en tu casa en Paraná.\n` +
+    `✔ 10% OFF pagando en efectivo o transferencia.\n\n` +
+    `¿Dudas? Escribinos por WhatsApp y te asesoramos.`;
+}
+
 function Productos({ avisar }) {
-  const [q, setQ] = useState(''), [d, setD] = useState(null), [ed, setEd] = useState(null);
-  const cargar = useCallback(async (qq) => { const r = await A('productos', { q: qq }); if (r.ok) setD(r); }, []);
-  useEffect(() => { const t = setTimeout(() => cargar(q), 300); return () => clearTimeout(t); }, [q, cargar]);
+  const [q, setQ] = useState(''), [filtro, setFiltro] = useState(''), [d, setD] = useState(null), [ed, setEd] = useState(null), [fotoMal, setFotoMal] = useState(false), [guardando, setGuardando] = useState(false);
+  const cargar = useCallback(async (qq, ff) => { const r = await A('productos', { q: qq, filtro: ff }); if (r.ok) setD(r); }, []);
+  useEffect(() => { const t = setTimeout(() => cargar(q, filtro), 300); return () => clearTimeout(t); }, [q, filtro, cargar]);
+  const abrir = (p) => { setFotoMal(false); setEd({ ...p, img_web: p.img_web || '', descripcion: p.descripcion || '', etiqueta: p.etiqueta || '' }); };
+  const foto = ed ? (linkFoto(ed.img_web) || ed.img) : '';
+  async function guardar(siguiente) {
+    setGuardando(true);
+    const r = await A('producto', { ...ed, img_web: linkFoto(ed.img_web) });
+    setGuardando(false); avisar(r.msg, !r.ok);
+    if (!r.ok) return;
+    const L = d?.productos || [], i = L.findIndex((x) => x.id === ed.id);
+    await cargar(q, filtro);
+    if (siguiente && L[i + 1]) abrir(L[i + 1]); else setEd(null);
+  }
+  async function pegar() {
+    try { const t = await navigator.clipboard.readText(); if (t) { setFotoMal(false); setEd((e) => ({ ...e, img_web: linkFoto(t) })); } } catch { avisar('Tocá el campo y pegá con Ctrl+V.', true); }
+  }
   return (<>
-    <div className="aviso ok" style={{ marginTop: 0 }}>Los productos, precios, ofertas, fotos y stock vienen de tu <b>caja</b> (se actualizan solos cada hora o con el botón “Actualizar web” de la caja). Acá podés ocultar alguno, ponerle otra foto, una descripción o destacarlo.</div>
-    {d && <div className="muted" style={{ margin: '10px 0' }}>{d.total} productos en la web · {d.sinFoto} sin foto</div>}
-    <input className="inp" placeholder="Buscar producto…" value={q} onChange={(e) => setQ(e.target.value)} />
-    {d?.productos.map((p) => (<div className="pcard" key={p.id} style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 10, opacity: p.oculto ? .5 : 1 }}>
-      <div className="lin" style={{ border: 0, padding: 0 }}>{p.img_web || p.img ? <div className="th"><img src={p.img_web || p.img} alt="" referrerPolicy="no-referrer" /></div> : <div className="th nofoto">—</div>}</div>
-      <div style={{ flex: 1, minWidth: 0 }}><b>{p.nombre}</b><div className="muted">{p.categoria} · {plata(p.oferta || p.precio)}{p.unidad === 'kg' ? '/kg' : ''} · stock {p.stock === null ? '—' : p.stock}{p.oculto ? ' · OCULTO' : ''}{p.destacado ? ' · ⭐ destacado' : ''}</div></div>
-      <button className="btn o" style={{ padding: '9px 12px' }} onClick={() => setEd({ ...p })}>Editar</button></div>))}
-    {ed && <div className="modal on" style={{ pointerEvents: 'auto', background: 'rgba(0,0,0,.6)' }}><div className="box" style={{ textAlign: 'left' }}>
-      <button className="x" onClick={() => setEd(null)}><Ic n="x" cl="s" /></button><h3 style={{ fontSize: 18 }}>{ed.nombre}</h3>
-      <label className="campo">Foto solo para la web (link https://…; vacío = la de la caja)</label><input className="inp" value={ed.img_web} onChange={(e) => setEd({ ...ed, img_web: e.target.value })} />
-      <label className="campo">Descripción (opcional, ayuda a aparecer en Google)</label><textarea className="inp" rows={4} value={ed.descripcion} onChange={(e) => setEd({ ...ed, descripcion: e.target.value })} />
-      <label className="chk"><input type="checkbox" checked={ed.destacado} onChange={(e) => setEd({ ...ed, destacado: e.target.checked })} /> Destacarlo en “Los más elegidos”</label>
-      <label className="chk"><input type="checkbox" checked={ed.oculto} onChange={(e) => setEd({ ...ed, oculto: e.target.checked })} /> Ocultarlo de la web</label>
-      <button className="btn r blk" style={{ marginTop: 14 }} onClick={async () => { const r = await A('producto', ed); avisar(r.msg, !r.ok); if (r.ok) { setEd(null); cargar(q); } }}>Guardar</button></div></div>}
+    <div className="aviso ok" style={{ marginTop: 0 }}>Precios, ofertas y stock vienen de tu <b>caja</b> (se actualizan solos cada hora). Acá le das a cada producto lo que lo hace vender: <b>foto, descripción, etiqueta y lugar destacado</b>.</div>
+    {d && <div className="kps" style={{ margin: '12px 0' }}>
+      <div className="kp"><div className="l">En la web</div><div className="v">{d.total}</div></div>
+      <div className="kp" style={{ cursor: 'pointer' }} onClick={() => setFiltro('sinFoto')}><div className="l">Sin foto</div><div className="v" style={{ color: d.sinFoto ? 'var(--gold)' : 'var(--ok)' }}>{d.sinFoto}</div><div className="s">tocá para verlos</div></div>
+      <div className="kp"><div className="l">Con foto</div><div className="v" style={{ color: 'var(--ok)' }}>{d.total - d.sinFoto}</div><div className="s">{d.total ? Math.round((d.total - d.sinFoto) / d.total * 100) : 0}% del catálogo</div></div>
+      <div className="kp"><div className="l">Mostrando</div><div className="v">{d.productos.length}</div></div>
+    </div>}
+    <input className="inp" placeholder="Buscar por nombre, código o categoría…" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="chips" style={{ marginTop: 10 }}>{FILTROS_PROD.map(([k, t]) => <button key={k} className={'chip' + (filtro === k ? ' on' : '')} onClick={() => setFiltro(k)}>{t}</button>)}</div>
+    {d?.productos.map((p) => (<div className="pcard" key={p.id} style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 10, opacity: p.oculto ? .5 : 1, cursor: 'pointer' }} onClick={() => abrir(p)}>
+      <div className="lin" style={{ border: 0, padding: 0 }}>{p.img_web || p.img ? <div className="th"><img src={p.img_web || p.img} alt="" referrerPolicy="no-referrer" /></div> : <div className="th nofoto">📷</div>}</div>
+      <div style={{ flex: 1, minWidth: 0 }}><b>{p.nombre}</b>{p.etiqueta && <span className="etq" style={{ position: 'static', marginLeft: 6, padding: '3px 7px', fontSize: 9 }}>{p.etiqueta}</span>}
+        <div className="muted">{p.categoria} · {plata(p.oferta || p.precio)}{p.unidad === 'kg' ? '/kg' : ''} · stock {p.stock === null ? '—' : Math.round(p.stock * 100) / 100}{p.oculto ? ' · OCULTO' : ''}{p.destacado ? ' · ⭐' : ''}{!p.descripcion ? ' · sin descripción' : ''}</div></div>
+      <span className="btn o" style={{ padding: '9px 12px' }}>Editar</span></div>))}
+
+    {ed && <div className="modal on" style={{ pointerEvents: 'auto', background: 'rgba(0,0,0,.7)' }}><div className="box" style={{ textAlign: 'left', maxWidth: 560 }}>
+      <button className="x" onClick={() => setEd(null)}><Ic n="x" cl="s" /></button>
+      <h3 style={{ fontSize: 18, paddingRight: 40 }}>{ed.nombre}</h3>
+      <div className="muted">{ed.categoria} · {plata(ed.oferta || ed.precio)}{ed.unidad === 'kg' ? '/kg' : ''} · código {ed.id}</div>
+
+      <div className="vprev">
+        <div className="ph">{foto && !fotoMal ? <img src={foto} alt="" referrerPolicy="no-referrer" onError={() => setFotoMal(true)} onLoad={() => setFotoMal(false)} /> : <span>{fotoMal ? '⚠️ Ese link no es una imagen' : '📷 Sin foto'}</span>}
+          {ed.etiqueta && <span className="etq">{ed.etiqueta}</span>}</div>
+        <div className="muted" style={{ fontSize: 12 }}>Así se ve en la tienda</div>
+      </div>
+
+      <label className="campo">Foto (pegá el link de la imagen)</label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input className="inp" placeholder="https://…jpg" value={ed.img_web} onChange={(e) => { setFotoMal(false); setEd({ ...ed, img_web: linkFoto(e.target.value) }); }} onPaste={(e) => { const t = e.clipboardData.getData('text'); if (t) { e.preventDefault(); setFotoMal(false); setEd({ ...ed, img_web: linkFoto(t) }); } }} />
+        <button className="btn o" style={{ padding: '0 14px' }} onClick={pegar} title="Pegar lo que copiaste">📋</button>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+        <a className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} href={'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(ed.nombre + ' producto')} target="_blank" rel="noopener">🔎 Buscar foto en Google</a>
+        {ed.img_web && <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5 }} onClick={() => setEd({ ...ed, img_web: '' })}>Quitar foto</button>}
+      </div>
+      <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>En Google: abrí la imagen → clic derecho → <b>“Copiar dirección de imagen”</b> → pegala acá.</div>
+
+      <label className="campo">Etiqueta sobre la foto</label>
+      <div className="chips" style={{ margin: 0, flexWrap: 'wrap' }}>
+        <button className={'chip' + (!ed.etiqueta ? ' on' : '')} onClick={() => setEd({ ...ed, etiqueta: '' })}>Ninguna</button>
+        {ETIQUETAS.map((t) => <button key={t} className={'chip' + (ed.etiqueta === t ? ' on' : '')} onClick={() => setEd({ ...ed, etiqueta: t })}>{t}</button>)}
+      </div>
+      <input className="inp" style={{ marginTop: 8 }} placeholder="…o escribí la tuya (máx. 22 letras)" maxLength={22} value={ETIQUETAS.includes(ed.etiqueta) ? '' : ed.etiqueta} onChange={(e) => setEd({ ...ed, etiqueta: e.target.value.toUpperCase() })} />
+
+      <label className="campo" style={{ display: 'flex', justifyContent: 'space-between' }}><span>Descripción (vende y ayuda a aparecer en Google)</span><span>{(ed.descripcion || '').length}/1500</span></label>
+      <textarea className="inp" rows={6} maxLength={1500} value={ed.descripcion} onChange={(e) => setEd({ ...ed, descripcion: e.target.value })} placeholder="Contá para qué sirve, por qué está bueno, cómo se usa…" />
+      {!ed.descripcion && <button className="btn o" style={{ padding: '9px 12px', fontSize: 11.5, marginTop: 8 }} onClick={() => setEd({ ...ed, descripcion: plantillaDesc(ed) })}>✨ Usar texto base</button>}
+
+      <label className="chk"><input type="checkbox" checked={!!ed.destacado} onChange={(e) => setEd({ ...ed, destacado: e.target.checked })} /> ⭐ Destacarlo en “Los más elegidos” del inicio</label>
+      <label className="chk"><input type="checkbox" checked={!!ed.oculto} onChange={(e) => setEd({ ...ed, oculto: e.target.checked })} /> 🙈 Ocultarlo de la web</label>
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+        <button className="btn r" style={{ flex: 1 }} disabled={guardando} onClick={() => guardar(false)}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+        <button className="btn o" style={{ flex: 1 }} disabled={guardando} onClick={() => guardar(true)}>Guardar y siguiente →</button>
+      </div>
+      <a className="linkito" href={'/producto/' + ed.slug} target="_blank" rel="noopener">Ver en la tienda ↗</a>
+    </div></div>}
   </>);
 }
 
