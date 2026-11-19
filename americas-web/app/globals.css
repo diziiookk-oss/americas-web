@@ -466,3 +466,7 @@
   .modal .box.tema-oscuro { background: radial-gradient(400px 300px at 50% 0%, rgba(227,36,43,.25), transparent 70%), #111; }
   .admtop { background: #111; padding: 10px 14px; border-radius: 18px; }
   .admtop .kicker { color: #ff6d72; }
+  /* el espacio de abajo (para la barra del carrito) queda dentro del pie negro, no como franja crema */
+  body { padding-bottom: 0; }
+  footer { padding-bottom: calc(110px + env(safe-area-inset-bottom)); margin-bottom: 0; }
+  .bdg { max-width: calc(100% - 64px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

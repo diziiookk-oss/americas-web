@@ -26,7 +26,7 @@ export default function Tarjeta({ p }) {
   return (
     <article className="prod">
       <Link href={url} aria-label={p.nombre}><Foto p={p}>
-        {ahorro > 0 ? <span className="bdg">Ahorrás {plata(ahorro)}{p.unidad === 'kg' ? '/kg' : ''}</span> : md > 0 ? <span className="bdg">Hasta −{md}% llevando más</span> : null}
+        {ahorro > 0 ? <span className="bdg">Ahorrás {plata(ahorro)}{p.unidad === 'kg' ? '/kg' : ''}</span> : md > 0 ? <span className="bdg">Hasta −{md}%</span> : null}
         {p.etiqueta && <span className={'etq' + (ahorro > 0 || md > 0 ? ' baja' : '')}>{p.etiqueta}</span>}
         {p.unidad === 'kg' && <span className="bdg2">x kg</span>}{!p.hay && <span className="bdg3">⏳ A pedido</span>}
       </Foto></Link>
