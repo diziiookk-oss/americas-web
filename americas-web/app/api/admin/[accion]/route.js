@@ -34,6 +34,7 @@ export async function POST(req, { params }) {
       case 'vendedores': r = { ok: true, ...(await A.listarVendedores()) }; break;
       case 'guardarVendedor': r = await A.guardarVendedor(b); break;
       case 'pagarVendedor': r = await A.pagarVendedor(b); break;
+      case 'decidirVendedor': r = await A.decidirVendedor(b); break;
       case 'pedidosVendedor': r = { ok: true, ...(await A.pedidosVendedor(b)) }; break;
       default: return NextResponse.json({ ok: false, msg: 'Acción desconocida.' }, { status: 404 });
     }

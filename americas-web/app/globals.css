@@ -521,3 +521,12 @@
   .otros[open] { flex-basis: 100%; }
   .ped .pasos { margin: 12px 0 2px; } .ped .paso { font-size: 9.5px; } .ped .paso i { width: 24px; height: 24px; font-size: 11px; }
   .ped .paso.ok i { background: var(--red); border-color: var(--red); color: #fff; box-shadow: none; }
+  /* página de revendedores */
+  .vend { padding-top: 14px; }
+  .vend .hero h1.h2s { font: 700 34px/1.05 var(--hf); text-transform: uppercase; color: #fff; }
+  .vend .hero h1.h2s em { font-style: normal; color: #ff3d43; }
+  @media (min-width: 900px) { .vend .hero h1.h2s { font-size: 52px; } }
+  .pasos3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .pasos3 div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center; }
+  .pasos3 b { display: grid; place-items: center; width: 30px; height: 30px; margin: 0 auto 6px; border-radius: 50%; background: var(--red); color: #fff; font: 700 15px/1 var(--hf); }
+  .pasos3 span { font-size: 12.5px; color: var(--txt2); }

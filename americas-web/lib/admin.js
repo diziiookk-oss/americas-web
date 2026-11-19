@@ -78,7 +78,7 @@ export function codigoDe(nombre) {
 }
 export async function listarVendedores() {
   const s = await db();
-  const rows = await s`SELECT v.codigo, v.nombre, v.telefono, v.activo, v.creado,
+  const rows = await s`SELECT v.codigo, v.nombre, v.telefono, v.activo, v.creado, v.estado, v.nota, v.alias, (v.clave <> '') AS tiene_cuenta,
       count(p.num) FILTER (WHERE p.estado <> 'Cancelado')::int AS pedidos,
       count(p.num) FILTER (WHERE p.estado = 'Entregado')::int AS entregados,
       coalesce(sum(p.total) FILTER (WHERE p.estado = 'Entregado'), 0) AS vendido,
@@ -107,6 +107,14 @@ export async function guardarVendedor({ codigo, nombre, telefono, activo }) {
   while ((await s`SELECT 1 FROM vendedores WHERE codigo = ${c}`).length) c = base + k++;
   await s`INSERT INTO vendedores (codigo, nombre, telefono) VALUES (${c}, ${n}, ${tel})`;
   return { ok: true, msg: 'Listo: el código de ' + n + ' es "' + c + '".', codigo: c, ...(await listarVendedores()) };
+}
+export async function decidirVendedor({ codigo, aprobar }) {
+  const s = await db();
+  const r = aprobar
+    ? await s`UPDATE vendedores SET estado = 'activo', activo = true WHERE codigo = ${codigo} RETURNING nombre`
+    : await s`UPDATE vendedores SET estado = 'rechazado', activo = false WHERE codigo = ${codigo} RETURNING nombre`;
+  if (!r.length) return { ok: false, msg: 'No encontré ese revendedor.' };
+  return { ok: true, msg: (aprobar ? 'Aprobado: ' : 'Rechazado: ') + r[0].nombre + '.', ...(await listarVendedores()) };
 }
 export async function pagarVendedor({ codigo }) {
   const s = await db();

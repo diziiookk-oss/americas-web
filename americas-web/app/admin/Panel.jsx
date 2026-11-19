@@ -335,7 +335,20 @@ function Vendedores({ avisar }) {
       <div className="kp"><div className="l">Revendedores</div><div className="v">{d.vendedores.filter((v) => v.activo).length}</div></div>
     </div>
 
-    <div className="pcard"><b>➕ Sumar revendedor</b>
+    {d.vendedores.filter((v) => v.estado === 'pendiente').length > 0 && <div className="pcard" style={{ borderLeft: '5px solid var(--gold)' }}>
+      <b style={{ font: '700 18px/1.1 var(--hf)' }}>🙋 Quieren vender con vos</b>
+      <div className="muted" style={{ marginBottom: 6 }}>Se anotaron desde la tienda. Aprobalos para que puedan entrar a su panel y empezar a vender.</div>
+      {d.vendedores.filter((v) => v.estado === 'pendiente').map((v) => (<div key={v.codigo} style={{ borderTop: '1px solid var(--line)', padding: '10px 0' }}>
+        <b>{v.nombre}</b> <span className="muted">· +{v.telefono} · {hora(v.creado)}</span>
+        {v.nota && <div className="muted" style={{ margin: '4px 0' }}>“{v.nota}”</div>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+          <button className="btn r" style={{ padding: '9px 12px', fontSize: 12 }} onClick={async () => { const r = await A('decidirVendedor', { codigo: v.codigo, aprobar: true }); avisar(r.msg, !r.ok); if (r.ok) { setD(r); if (v.telefono && confirm('¿Le avisás por WhatsApp que ya está aprobado?')) wa(v.telefono, `¡Hola ${v.nombre.split(' ')[0]}! 🎉 Ya estás aprobado como revendedor de Américas Drugstore.\n\nEntrá a tu panel con tu WhatsApp y tu contraseña:\n${sitio}/vendedor\n\nAhí tenés tu link para compartir y ves tus ventas y lo que cobrás. Ganás el ${d.pct}% de la ganancia de cada pedido entregado y te pagamos todas las semanas 💪`); } }}>✅ Aprobar</button>
+          <button className="btn o" style={{ padding: '9px 12px', fontSize: 12 }} onClick={async () => { if (!confirm('¿Rechazar a ' + v.nombre + '?')) return; const r = await A('decidirVendedor', { codigo: v.codigo, aprobar: false }); avisar(r.msg, !r.ok); if (r.ok) setD(r); }}>Rechazar</button>
+          {v.telefono && <button className="btn o" style={{ padding: '9px 12px', fontSize: 12 }} onClick={() => wa(v.telefono, `¡Hola ${v.nombre.split(' ')[0]}! Vi que te anotaste para vender con Américas Drugstore 🙌 ¿Me contás un poco cómo pensás vender?`)}><Ic n="wa" cl="s" /> Escribirle</button>}
+        </div></div>))}
+    </div>}
+
+    <div className="pcard"><b>➕ Sumar revendedor a mano</b> <span className="muted">(o compartí <a style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => copiar(sitio + '/vendedor')}>{sitio}/vendedor</a> para que se anoten solos)</span>
       <div className="g2" style={{ marginTop: 4 }}>
         <div><label className="campo">Nombre</label><input className="inp" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} placeholder="Ej. Pedro Gómez" /></div>
         <div><label className="campo">WhatsApp</label><input className="inp" type="tel" value={nuevo.telefono} onChange={(e) => setNuevo({ ...nuevo, telefono: e.target.value })} placeholder="343 4123456" /></div>
@@ -343,9 +356,10 @@ function Vendedores({ avisar }) {
       <button className="btn r blk" style={{ marginTop: 12 }} onClick={async () => { const r = await A('guardarVendedor', nuevo); avisar(r.msg, !r.ok); if (r.ok) { setD(r); setNuevo({ nombre: '', telefono: '' }); } }}>Crear y generar su link</button>
     </div>
 
-    {d.vendedores.map((v) => (<div className="pcard" key={v.codigo} style={{ opacity: v.activo ? 1 : .55 }}>
+    {d.vendedores.filter((v) => v.estado !== 'pendiente' && v.estado !== 'rechazado').map((v) => (<div className="pcard" key={v.codigo} style={{ opacity: v.activo ? 1 : .55 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <div><b style={{ font: '900 17px/1.1 var(--hf)' }}>{v.nombre}</b><div className="muted">código <b>{v.codigo}</b>{v.telefono ? ' · +' + v.telefono : ''}{!v.activo ? ' · PAUSADO' : ''}</div></div>
+        <div><b style={{ font: '700 18px/1.1 var(--hf)' }}>{v.nombre}</b><div className="muted">código <b>{v.codigo}</b>{v.telefono ? ' · +' + v.telefono : ''}{!v.activo ? ' · PAUSADO' : ''}{v.tiene_cuenta ? ' · tiene cuenta' : ' · sin cuenta todavía'}</div>
+          {v.alias && <div className="muted">💳 Le pagás a: <b style={{ color: 'var(--txt)' }}>{v.alias}</b></div>}</div>
         <div style={{ textAlign: 'right' }}><div className="muted">a pagar</div><b style={{ font: '900 20px/1 var(--hf)', color: v.pendiente ? 'var(--gold)' : 'var(--txt)' }}>{plata(v.pendiente)}</b></div>
       </div>
       <div className="g4" style={{ marginTop: 10 }}>

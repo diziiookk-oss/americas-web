@@ -58,6 +58,10 @@ ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS comision numeric DEFAULT 0;
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS sin_costo int DEFAULT 0;
 ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS comision_pagada timestamptz;
 CREATE INDEX IF NOT EXISTS pedidos_vendedor ON pedidos (vendedor);
+ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS clave text DEFAULT '';
+ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS estado text DEFAULT 'activo';
+ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS nota text DEFAULT '';
+ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS alias text DEFAULT '';
 `;
 
 const PREMIOS_DEF = [
