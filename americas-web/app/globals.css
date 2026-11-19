@@ -470,3 +470,54 @@
   body { padding-bottom: 0; }
   footer { padding-bottom: calc(110px + env(safe-area-inset-bottom)); margin-bottom: 0; }
   .bdg { max-width: calc(100% - 64px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ================================================================ PANEL DEL DUEÑO (app) */
+  .adshell { min-height: 100vh; }
+  .adside { display: none; }
+  .admain { padding: 0 14px calc(96px + env(safe-area-inset-bottom)); max-width: 1080px; margin: 0 auto; }
+  .adtop { display: flex; align-items: center; background: #111; margin: 0 -14px; padding: 10px 14px; border-bottom: 3px solid var(--red); position: sticky; top: 0; z-index: 30; }
+  .adh1 { font: 700 28px/1.1 var(--hf); text-transform: uppercase; letter-spacing: .4px; margin: 18px 0 14px; }
+  .adi { display: flex; align-items: center; gap: 11px; width: 100%; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; position: relative; font: 600 14px/1 var(--hf); letter-spacing: .7px; text-transform: uppercase; padding: 12px 13px; border-radius: 13px; }
+  .adi svg { width: 21px; height: 21px; flex: none; }
+  .adi .nb { position: static; margin-left: auto; }
+  .adbottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: #111; border-top: 3px solid var(--red); display: flex; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .adbottom .adi { flex: 1; flex-direction: column; gap: 5px; padding: 8px 2px; font-size: 10px; letter-spacing: .4px; color: #a8a8a8; justify-content: center; text-align: center; }
+  .adbottom .adi.on { color: #fff; background: rgba(215,25,32,.9); }
+  .adbottom .adi .nb { position: absolute; top: 2px; right: calc(50% - 22px); margin: 0; }
+  .admas { display: grid; gap: 4px; }
+  .admas .adi { background: var(--card); border: 1px solid var(--line); }
+  .admas .adi.on { background: var(--red); color: #fff; border-color: var(--red); }
+  @media (min-width: 900px) {
+    .adshell { display: grid; grid-template-columns: 250px 1fr; }
+    .adside { display: flex; flex-direction: column; gap: 3px; position: sticky; top: 0; height: 100vh; background: #111; padding: 18px 12px; border-right: 3px solid var(--red); overflow-y: auto; }
+    .adside .adi { color: #c9c9c9; } .adside .adi:hover { background: #1d1d1d; color: #fff; } .adside .adi.on { background: var(--red); color: #fff; }
+    .adlogo { padding: 4px 10px 14px; }
+    .adgrupo { color: #777; font: 600 11px/1 var(--hf); letter-spacing: 1.6px; text-transform: uppercase; margin: 14px 13px 6px; }
+    .adtop, .adbottom { display: none; }
+    .admain { padding: 10px 32px 40px; width: 100%; }
+    .adh1 { font-size: 34px; margin-top: 22px; }
+  }
+  .saludo { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; } .saludo b { font: 700 22px/1.1 var(--hf); } .saludo span { color: var(--txt2); }
+  .abierta { display: flex; align-items: center; gap: 12px; background: var(--card); border: 2px solid rgba(215,25,32,.45); border-radius: 16px; padding: 13px 14px; cursor: pointer; }
+  .abierta i { width: 14px; height: 14px; border-radius: 50%; background: var(--red); flex: none; box-shadow: 0 0 0 4px rgba(215,25,32,.15); }
+  .abierta div { flex: 1; } .abierta b { display: block; font: 700 16px/1.1 var(--hf); letter-spacing: .4px; } .abierta span { font-size: 13px; color: var(--mute); }
+  .abierta em { font-style: normal; font: 600 12px/1 var(--hf); letter-spacing: .8px; text-transform: uppercase; border: 1px solid var(--line2); padding: 9px 12px; border-radius: 10px; }
+  .abierta.si { border-color: rgba(19,138,73,.45); } .abierta.si i { background: var(--ok); box-shadow: 0 0 0 4px rgba(19,138,73,.15); }
+  .pcard.mini { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .est { display: inline-block; font: 600 11px/1 var(--hf); letter-spacing: .8px; text-transform: uppercase; padding: 6px 9px; border-radius: 99px; background: var(--soft); color: var(--txt2); margin-top: 6px; }
+  .est.e-Nuevo { background: var(--red); color: #fff; } .est.e-Preparando { background: #fff1d6; color: #7a5200; } .est.e-Listo, .est.e-Encamino { background: #e1efff; color: #1b4f8a; }
+  .est.e-Entregado { background: #dff5e8; color: #11683a; } .est.e-Cancelado { background: #eee; color: #777; }
+  .tareas { display: grid; gap: 10px; } @media (min-width: 700px) { .tareas { grid-template-columns: 1fr 1fr; } }
+  .tarea { text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; cursor: pointer; color: var(--txt); }
+  .tarea:hover { border-color: var(--red); } .tarea b { display: block; font: 700 16px/1.2 var(--hf); letter-spacing: .3px; margin-bottom: 4px; } .tarea span { color: var(--mute); font-size: 13px; }
+  .ped { border-left: 5px solid var(--line2); margin-top: 12px; }
+  .ped.e-Nuevo { border-left-color: var(--red); } .ped.e-Preparando { border-left-color: var(--gold); } .ped.e-Listo, .ped.e-Encamino { border-left-color: #3b82f6; } .ped.e-Entregado { border-left-color: var(--ok); } .ped.e-Cancelado { opacity: .65; }
+  .pnom { font: 700 18px/1.1 var(--hf); letter-spacing: .3px; } .ptot { font: 700 22px/1 var(--hf); }
+  .pdato { margin-top: 8px; }
+  .pdet { white-space: pre-line; font-size: 14px; background: var(--soft); border-radius: 12px; padding: 10px 12px; margin: 8px 0; color: var(--txt); }
+  .pacc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: flex-start; }
+  .pacc .btn { padding: 9px 12px; font-size: 12px; }
+  .otros summary { list-style: none; } .otros summary::-webkit-details-marker { display: none; }
+  .otros[open] { flex-basis: 100%; }
+  .ped .pasos { margin: 12px 0 2px; } .ped .paso { font-size: 9.5px; } .ped .paso i { width: 24px; height: 24px; font-size: 11px; }
+  .ped .paso.ok i { background: var(--red); border-color: var(--red); color: #fff; box-shadow: none; }

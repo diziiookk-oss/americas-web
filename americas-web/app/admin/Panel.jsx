@@ -13,26 +13,108 @@ async function A(accion, body) {
 const hora = (ms) => new Date(ms).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const wa = (tel, txt) => window.open('https://wa.me/' + telWA(tel) + '?text=' + encodeURIComponent(txt), '_blank');
 
+// Secciones del panel: las 5 primeras van en la barra de abajo del celu; el resto en "Más".
+const SECCIONES = [
+  ['inicio', 'home', 'Inicio'], ['pedidos', 'receipt', 'Pedidos'], ['productos', 'bag', 'Productos'], ['vendedores', 'gift', 'Revendedores'],
+  ['estadisticas', 'grid', 'Estadísticas'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos de stock'], ['config', 'shop', 'Ajustes']
+];
+const TITULOS = { inicio: 'Inicio', pedidos: 'Pedidos', productos: 'Productos', vendedores: 'Revendedores', estadisticas: 'Estadísticas', ruleta: 'Ruleta de premios', avisos: 'Avisos de stock', config: 'Ajustes de la tienda' };
+
 export default function Panel() {
-  const [log, setLog] = useState(null), [tab, setTab] = useState('pedidos'), [toast, setToast] = useState(null), [nuevos, setNuevos] = useState(0);
+  const [log, setLog] = useState(null), [tab, setTab] = useState('inicio'), [extra, setExtra] = useState(null), [toast, setToast] = useState(null), [nuevos, setNuevos] = useState(0), [mas, setMas] = useState(false);
   const avisar = useCallback((t, mal) => { setToast({ t, mal }); setTimeout(() => setToast(null), 2800); }, []);
-  useEffect(() => { A('pedidos').then((r) => setLog(!!r.ok)); const h = () => setLog(false); window.addEventListener('ad-login', h); return () => window.removeEventListener('ad-login', h); }, []);
+  useEffect(() => { A('pedidos').then((r) => { setLog(!!r.ok); if (r.ok) setNuevos(r.nuevos); }); const h = () => setLog(false); window.addEventListener('ad-login', h); return () => window.removeEventListener('ad-login', h); }, []);
+  // vigila pedidos nuevos desde cualquier sección (suena y avisa)
+  const ultN = useRef(-1);
+  useEffect(() => {
+    if (!log) return;
+    const t = setInterval(async () => { const r = await A('pedidos'); if (!r.ok) return; if (ultN.current >= 0 && r.nuevos > ultN.current) { avisar('🛒 ¡Entró un pedido nuevo!'); sonar(); } ultN.current = r.nuevos; setNuevos(r.nuevos); }, 30000);
+    return () => clearInterval(t);
+  }, [log, avisar]);
   if (log === null) return <div className="vacio">Cargando…</div>;
   if (!log) return <Login onOk={() => setLog(true)} />;
-  const T = [['pedidos', 'receipt', 'Pedidos'], ['estadisticas', 'grid', 'Estadísticas'], ['productos', 'bag', 'Productos'], ['vendedores', 'gift', 'Revende'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos'], ['config', 'shop', 'Ajustes']];
-  return (<div className="adm">
-    <div className="admtop tema-oscuro"><a href="/" target="_blank" rel="noopener"><Logo alto={34} /></a><span className="kicker" style={{ marginLeft: 6 }}>Panel</span>
-      <button className="btn o" style={{ marginLeft: 'auto', padding: '9px 13px' }} onClick={async () => { await A('logout'); setLog(false); }}>Salir</button></div>
-    <nav className="tabs">{T.map(([k, i, t]) => <button key={k} className={'tab' + (tab === k ? ' on' : '')} onClick={() => setTab(k)} style={{ position: 'relative' }}><Ic n={i} />{t}{k === 'pedidos' && nuevos > 0 && <b className="nb">{nuevos}</b>}</button>)}</nav>
-    {tab === 'pedidos' && <Pedidos avisar={avisar} setNuevos={setNuevos} />}
-    {tab === 'estadisticas' && <Estadisticas />}
-    {tab === 'productos' && <Productos avisar={avisar} />}
-    {tab === 'vendedores' && <Vendedores avisar={avisar} />}
-    {tab === 'ruleta' && <Ruleta avisar={avisar} />}
-    {tab === 'avisos' && <Avisos />}
-    {tab === 'config' && <Config avisar={avisar} />}
+  const ir = (k, x) => { setTab(k); setExtra(x || null); setMas(false); window.scrollTo(0, 0); };
+  const item = ([k, i, t]) => <button key={k} className={'adi' + (tab === k ? ' on' : '')} onClick={() => ir(k)}><Ic n={i} /><span>{t}</span>{k === 'pedidos' && nuevos > 0 && <b className="nb">{nuevos}</b>}</button>;
+  const salir = async () => { await A('logout'); setLog(false); };
+  return (<div className="adshell">
+    <aside className="adside tema-oscuro">
+      <a href="/" target="_blank" rel="noopener" className="adlogo"><Logo alto={44} /></a>
+      <div className="adgrupo">Día a día</div>{SECCIONES.slice(0, 4).map(item)}
+      <div className="adgrupo">Tienda</div>{SECCIONES.slice(4).map(item)}
+      <div style={{ marginTop: 'auto' }}><a className="adi" href="/" target="_blank" rel="noopener"><Ic n="shop" /><span>Ver mi tienda ↗</span></a><button className="adi" onClick={salir}><Ic n="x" /><span>Salir</span></button></div>
+    </aside>
+    <div className="admain">
+      <div className="adtop tema-oscuro"><Logo alto={30} /><a className="btn o" href="/" target="_blank" rel="noopener" style={{ marginLeft: 'auto', padding: '8px 12px', fontSize: 11 }}>Ver tienda ↗</a></div>
+      <h1 className="adh1">{TITULOS[tab]}</h1>
+      {tab === 'inicio' && <Inicio avisar={avisar} ir={ir} />}
+      {tab === 'pedidos' && <Pedidos avisar={avisar} setNuevos={setNuevos} />}
+      {tab === 'estadisticas' && <Estadisticas />}
+      {tab === 'productos' && <Productos avisar={avisar} filtroInicial={extra} />}
+      {tab === 'vendedores' && <Vendedores avisar={avisar} />}
+      {tab === 'ruleta' && <Ruleta avisar={avisar} />}
+      {tab === 'avisos' && <Avisos />}
+      {tab === 'config' && <Config avisar={avisar} />}
+    </div>
+    <nav className="adbottom">{SECCIONES.slice(0, 4).map(item)}<button className={'adi' + (SECCIONES.slice(4).some((s) => s[0] === tab) ? ' on' : '')} onClick={() => setMas(true)}><Ic n="grid" /><span>Más</span></button></nav>
+    {mas && <><div className="velo on" onClick={() => setMas(false)} /><div className="hoja on" style={{ zIndex: 90 }}><div className="asa" /><h3>Más opciones<button className="x" onClick={() => setMas(false)}><Ic n="x" cl="s" /></button></h3>
+      <div className="admas">{SECCIONES.slice(4).map(item)}<a className="adi" href="/" target="_blank" rel="noopener"><Ic n="shop" /><span>Ver mi tienda ↗</span></a><button className="adi" onClick={salir}><Ic n="x" /><span>Salir</span></button></div></div></>}
     {toast && <div className={'toast on' + (toast.mal ? ' bad' : '')}>{toast.t}</div>}
   </div>);
+}
+
+function sonar() { try { const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; o.connect(g); g.connect(a.destination); g.gain.value = .15; o.start(); setTimeout(() => { o.frequency.value = 1320; }, 150); setTimeout(() => { o.stop(); a.close(); }, 320); } catch {} }
+
+/* ------------------------------------------------------------------ inicio */
+const SIGUIENTE = { Nuevo: ['Preparando', '✅ Aceptar y preparar'], Preparando: ['Listo', '📦 Marcar como listo'], Listo: [null, ''], 'En camino': ['Entregado', '🏁 Marcar entregado'] };
+function siguiente(p) {
+  if (p.estado === 'Listo') return p.entrega === 'Envío' ? ['En camino', '🛵 Salió a entregar'] : ['Entregado', '🏁 Lo retiró: entregado'];
+  return SIGUIENTE[p.estado] || [null, ''];
+}
+function Inicio({ avisar, ir }) {
+  const [d, setD] = useState(null), [v, setV] = useState(null), [prod, setProd] = useState(null), [cfg, setCfg] = useState(null);
+  const cargar = useCallback(async () => {
+    const [a, b, c, e] = await Promise.all([A('pedidos'), A('vendedores'), A('productos', { filtro: 'sinFoto' }), A('config')]);
+    if (a.ok) setD(a); if (b.ok) setV(b); if (c.ok) setProd(c); if (e.ok) setCfg(e.config);
+  }, []);
+  useEffect(() => { cargar(); const t = setInterval(cargar, 30000); return () => clearInterval(t); }, [cargar]);
+  if (!d) return <div className="sk" style={{ height: 300 }} />;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const sem = Date.now() - 7 * 86400000;
+  const validos = d.pedidos.filter((p) => p.estado !== 'Cancelado');
+  const vHoy = validos.filter((p) => p.fecha >= hoy.getTime()), vSem = validos.filter((p) => p.fecha >= sem);
+  const activos = d.pedidos.filter((p) => p.estado !== 'Entregado' && p.estado !== 'Cancelado');
+  const aPagar = v ? v.vendedores.reduce((a, x) => a + x.pendiente, 0) : 0;
+  const h = new Date().getHours(), saludo = h < 13 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const avanzar = async (p) => { const [e] = siguiente(p); if (!e) return; const r = await A('estado', { nro: p.nro, estado: e }); avisar(r.msg, !r.ok); if (r.ok) { setD(r); if (confirm('¿Le avisás a ' + p.cliente + ' por WhatsApp?')) wa(p.tel, msgEstado(p, e)); } };
+  const abierta = cfg ? cfg.abierta : true;
+  return (<>
+    <div className="saludo"><b>{saludo} 👋</b><span>{activos.length ? 'Tenés ' + activos.length + ' pedido' + (activos.length > 1 ? 's' : '') + ' para atender.' : 'No hay pedidos pendientes. ¡Todo al día!'}</span></div>
+    {cfg && <div className={'abierta' + (abierta ? ' si' : '')} onClick={async () => { const r = await A('guardarConfig', { config: { abierta: !abierta } }); avisar(r.ok ? (abierta ? 'Tienda cerrada: no entran pedidos.' : 'Tienda abierta: ya entran pedidos.') : r.msg, !r.ok); if (r.ok) setCfg(r.config); }}>
+      <i /><div><b>{abierta ? 'La tienda está ABIERTA' : 'La tienda está CERRADA'}</b><span>{abierta ? 'Están entrando pedidos. Tocá para cerrarla.' : 'No entran pedidos. Tocá para abrirla.'}</span></div><em>{abierta ? 'Cerrar' : 'Abrir'}</em></div>}
+    <div className="kps" style={{ marginTop: 12 }}>
+      <div className="kp hero"><div className="l">Vendido hoy</div><div className="v">{plata(vHoy.reduce((a, p) => a + p.total, 0))}</div><div className="s">{vHoy.length} pedido{vHoy.length === 1 ? '' : 's'}</div></div>
+      <div className="kp"><div className="l">Últimos 7 días</div><div className="v">{plata(vSem.reduce((a, p) => a + p.total, 0))}</div><div className="s">{vSem.length} pedidos · ticket {plata(vSem.length ? vSem.reduce((a, p) => a + p.total, 0) / vSem.length : 0)}</div></div>
+      <div className="kp" style={{ cursor: 'pointer' }} onClick={() => ir('pedidos')}><div className="l">Para atender</div><div className="v" style={{ color: activos.length ? 'var(--red)' : 'var(--ok)' }}>{activos.length}</div><div className="s">ver pedidos →</div></div>
+      <div className="kp" style={{ cursor: 'pointer' }} onClick={() => ir('vendedores')}><div className="l">A pagar a revendedores</div><div className="v">{plata(aPagar)}</div><div className="s">ver revendedores →</div></div>
+    </div>
+
+    <div className="sec" style={{ marginTop: 22 }}><h3>Para atender ahora</h3>{activos.length > 0 && <a onClick={() => ir('pedidos')}>Ver todos →</a>}</div>
+    {!activos.length && <div className="pcard muted" style={{ textAlign: 'center' }}>🎉 Nada pendiente. Cuando entre un pedido va a sonar y aparecer acá.</div>}
+    {activos.slice(0, 5).map((p) => { const [e, t] = siguiente(p); return (
+      <div className="pcard mini" key={p.nro}>
+        <div style={{ flex: 1, minWidth: 0 }}><b>{p.nro} · {p.cliente}</b><div className="muted">{hora(p.fecha)} · {p.entrega === 'Envío' ? '🛵 Envío' : '🏪 Retira'} · {plata(p.total)}</div></div>
+        <span className={'est e-' + p.estado.replace(' ', '')}>{p.estado}</span>
+        {e && <button className="btn r" style={{ padding: '10px 12px', fontSize: 12 }} onClick={() => avanzar(p)}>{t}</button>}
+      </div>); })}
+
+    <div className="sec" style={{ marginTop: 22 }}><h3>Para vender más</h3></div>
+    <div className="tareas">
+      {prod && prod.sinFoto > 0 && <button className="tarea" onClick={() => ir('productos', 'sinFoto')}><b>📷 {prod.sinFoto} productos sin foto</b><span>Con foto se venden más. Completalos de a uno con “Guardar y siguiente”.</span></button>}
+      <button className="tarea" onClick={() => ir('productos', 'destacados')}><b>⭐ Elegí tus destacados</b><span>Los que marcás como destacados salen primero en el inicio de la tienda.</span></button>
+      <button className="tarea" onClick={() => ir('vendedores')}><b>🤝 Sumá revendedores</b><span>Cada uno vende con su link y gana el {v ? v.pct : 30}% de la ganancia.</span></button>
+      <button className="tarea" onClick={async () => { const u = window.location.origin; try { await navigator.clipboard.writeText(u); avisar('Link de la tienda copiado: pegalo en tus estados.'); } catch { avisar(u); } }}><b>🔗 Copiar link de la tienda</b><span>Para tus estados de WhatsApp, Instagram y grupos del barrio.</span></button>
+    </div>
+  </>);
 }
 
 function Login({ onOk }) {
@@ -64,22 +146,36 @@ function Pedidos({ avisar, setNuevos }) {
   if (!d) return <div className="sk" style={{ height: 200 }} />;
   const act = (p) => p.estado !== 'Entregado' && p.estado !== 'Cancelado';
   const L = d.pedidos.filter((p) => f === 'Todos' || (f === 'Activos' ? act(p) : p.estado === f));
+  const [aviso, setAviso] = useState({}), [q, setQ] = useState('');
   const cambiar = async (p, e) => { const r = await A('estado', { nro: p.nro, estado: e }); if (!r.ok) return avisar(r.msg, true); setD(r); setNuevos(r.nuevos); ult.current = r.nuevos;
-    if (e !== 'Nuevo' && confirm('¿Le avisás a ' + p.cliente + ' por WhatsApp?\n\n' + msgEstado(p, e))) wa(p.tel, msgEstado(p, e)); };
+    avisar('Pedido ' + p.nro + ': ' + e); if (e !== 'Nuevo') setAviso((a) => ({ ...a, [p.nro]: e })); };
+  const qq = q.trim().toLowerCase().replace(/^p-?/, '');
+  const L2 = qq ? L.filter((p) => (p.nro + ' ' + p.cliente + ' ' + p.tel).toLowerCase().includes(qq)) : L;
   return (<>
-    <div className="chips">{FILTROS.map((x) => { const n = d.pedidos.filter((p) => x === 'Todos' || (x === 'Activos' ? act(p) : p.estado === x)).length; return <button key={x} className={'chip' + (f === x ? ' on' : '')} onClick={() => setF(x)}>{x}{n ? ' · ' + n : ''}</button>; })}</div>
+    <input className="inp" placeholder="Buscar por cliente, número o teléfono…" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="chips" style={{ marginTop: 10 }}>{FILTROS.map((x) => { const n = d.pedidos.filter((p) => x === 'Todos' || (x === 'Activos' ? act(p) : p.estado === x)).length; return <button key={x} className={'chip' + (f === x ? ' on' : '')} onClick={() => setF(x)}>{x}{n ? ' · ' + n : ''}</button>; })}</div>
     {!d.pedidos.length && <div className="pcard" style={{ textAlign: 'center' }}><div className="muted">Todavía no llegaron pedidos. Compartí el link de la tienda 😉</div></div>}
-    {L.map((p) => (<div className="pcard" key={p.nro} style={{ borderLeft: '4px solid ' + ({ Nuevo: 'var(--red)', Preparando: 'var(--gold)', Listo: '#4da3ff', 'En camino': '#4da3ff', Entregado: 'var(--ok)', Cancelado: '#555' }[p.estado]) }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><div><b style={{ font: '900 17px/1.1 var(--hf)' }}>{p.nro} · {p.cliente}</b><div className="muted">{hora(p.fecha)} · {p.pago} · +{p.tel}</div></div>
-        <div style={{ textAlign: 'right' }}><b style={{ font: '900 19px/1 var(--hf)' }}>{plata(p.total)}</b><div><span className={'estado ' + (p.estado === 'Nuevo' ? 'no' : 'si')} style={{ margin: '6px 0 0' }}><i />{p.estado}</span></div></div></div>
-      <div style={{ marginTop: 6 }}>{p.entrega === 'Envío' ? <>🛵 <b>Envío</b> a {p.dir}</> : <>🏪 <b>Retira</b> en el local</>}</div>
-      <div style={{ whiteSpace: 'pre-line', fontSize: 13.5, background: '#111114', borderRadius: 12, padding: '9px 11px', margin: '8px 0', color: 'var(--txt2)' }}>{p.detalle}</div>
+    {d.pedidos.length > 0 && !L2.length && <div className="pcard muted" style={{ textAlign: 'center' }}>No hay pedidos en “{f}”{qq ? ' con esa búsqueda' : ''}.</div>}
+    {L2.map((p) => { const [sig, sigT] = siguiente(p); const pasos = p.entrega === 'Envío' ? ['Nuevo', 'Preparando', 'Listo', 'En camino', 'Entregado'] : ['Nuevo', 'Preparando', 'Listo', 'Entregado']; const ip = pasos.indexOf(p.estado);
+      return (<div className={'pcard ped e-' + p.estado.replace(' ', '')} key={p.nro}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><div><b className="pnom">{p.nro} · {p.cliente}</b><div className="muted">{hora(p.fecha)} · 💳 {p.pago}</div></div>
+        <div style={{ textAlign: 'right' }}><b className="ptot">{plata(p.total)}</b><div><span className={'est e-' + p.estado.replace(' ', '')}>{p.estado}</span></div></div></div>
+      {p.estado !== 'Cancelado' && <div className="pasos">{pasos.map((x, i) => <div key={x} className={'paso' + (i <= ip ? ' ok' : '')}><i>{i < ip || p.estado === 'Entregado' ? '✓' : i + 1}</i>{x}</div>)}</div>}
+      <div className="pdato">{p.entrega === 'Envío' ? <>🛵 <b>Envío</b> a {p.dir}</> : <>🏪 <b>Retira</b> en el local</>}</div>
+      <div className="pdet">{p.detalle}</div>
       {(p.descuento > 0 || p.envio > 0) && <div className="muted">Subtotal {plata(p.subtotal)}{p.descPremio ? ' · premio −' + plata(p.descPremio) : ''}{p.descPago ? ' · desc. pago −' + plata(p.descPago) : ''}{p.envio ? ' · envío ' + plata(p.envio) : ''}</div>}
       {p.vendedor && <div className="muted">🤝 Revendedor <b style={{ color: 'var(--txt)' }}>{p.vendedor}</b> · comisión {plata(p.comision)}{p.estado === 'Entregado' ? (p.comisionPagada ? ' · ✅ pagada' : ' · a pagar') : ' · se cobra al entregar'}</div>}
       {p.premio && <div className="muted">🎁 {p.premio}</div>}{p.nota && <div className="aviso y">📝 {p.nota}</div>}{p.ticket && <div className="muted">Cobrado en la caja · ticket {p.ticket}</div>}
-      <div className="chips" style={{ margin: '10px 0 0' }}>{d.estados.filter((e) => e !== 'En camino' || p.entrega === 'Envío').map((e) => <button key={e} className={'chip' + (p.estado === e ? ' on' : '')} onClick={() => cambiar(p, e)}>{e}</button>)}</div>
-      <button className="btn w" style={{ marginTop: 10, padding: '10px 14px' }} onClick={() => wa(p.tel, msgEstado(p, p.estado))}><Ic n="wa" cl="s" /> Escribirle</button>
-    </div>))}
+      {aviso[p.nro] && <button className="btn w blk" style={{ marginTop: 10 }} onClick={() => { wa(p.tel, msgEstado(p, aviso[p.nro])); setAviso((a) => { const n = { ...a }; delete n[p.nro]; return n; }); }}><Ic n="wa" cl="s" /> Avisarle a {p.cliente.split(' ')[0]} que está “{aviso[p.nro]}”</button>}
+      {sig && <button className="btn r blk" style={{ marginTop: 10 }} onClick={() => cambiar(p, sig)}>{sigT}</button>}
+      <div className="pacc">
+        <button className="btn o" onClick={() => wa(p.tel, msgEstado(p, p.estado))}><Ic n="wa" cl="s" /> WhatsApp</button>
+        <a className="btn o" href={'tel:+' + telWA(p.tel)}>📞 Llamar</a>
+        {p.entrega === 'Envío' && p.dir && <a className="btn o" href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.dir + ', Paraná, Entre Ríos')} target="_blank" rel="noopener">🗺️ Mapa</a>}
+        <details className="otros"><summary className="btn o">Cambiar estado ▾</summary>
+          <div className="chips" style={{ margin: '8px 0 0', flexWrap: 'wrap' }}>{d.estados.filter((e) => e !== 'En camino' || p.entrega === 'Envío').map((e) => <button key={e} className={'chip' + (p.estado === e ? ' on' : '')} onClick={() => { if (e === 'Cancelado' && !confirm('¿Cancelar el pedido ' + p.nro + '?')) return; cambiar(p, e); }}>{e}</button>)}</div></details>
+      </div>
+    </div>); })}
   </>);
 }
 
@@ -87,7 +183,7 @@ function Pedidos({ avisar, setNuevos }) {
 function Kpi({ t, v, sub, ant, din, hero }) {
   const pct = ant ? Math.round((v - ant) / ant * 100) : null;
   return <div className={'kp' + (hero ? ' hero' : '')}><div className="l">{t}</div><div className="v">{din ? plata(v) : String(v).replace('.', ',')}</div>
-    {ant !== undefined && <div className="s" style={{ color: pct === null ? 'var(--mute)' : pct >= 0 ? 'var(--ok)' : 'var(--red2)' }}>{pct === null ? (v ? 'nuevo' : '') : (pct >= 0 ? '↗ +' : '↘ ') + pct + '% vs. período anterior'}</div>}
+    {ant !== undefined && <div className="s" style={{ color: pct === null ? 'var(--mute)' : pct >= 0 ? 'var(--ok)' : 'var(--red2)' }}>{pct === null ? '' : (pct >= 0 ? '↗ +' : '↘ ') + pct + '% vs. período anterior'}</div>}
     {sub && <div className="s">{sub}</div>}</div>;
 }
 function Estadisticas() {
@@ -136,8 +232,8 @@ function plantillaDesc(p) {
     `¿Dudas? Escribinos por WhatsApp y te asesoramos.`;
 }
 
-function Productos({ avisar }) {
-  const [q, setQ] = useState(''), [filtro, setFiltro] = useState(''), [d, setD] = useState(null), [ed, setEd] = useState(null), [fotoMal, setFotoMal] = useState(false), [guardando, setGuardando] = useState(false);
+function Productos({ avisar, filtroInicial }) {
+  const [q, setQ] = useState(''), [filtro, setFiltro] = useState(filtroInicial || ''), [d, setD] = useState(null), [ed, setEd] = useState(null), [fotoMal, setFotoMal] = useState(false), [guardando, setGuardando] = useState(false);
   const cargar = useCallback(async (qq, ff) => { const r = await A('productos', { q: qq, filtro: ff }); if (r.ok) setD(r); }, []);
   useEffect(() => { const t = setTimeout(() => cargar(q, filtro), 300); return () => clearTimeout(t); }, [q, filtro, cargar]);
   const abrir = (p) => { setFotoMal(false); setEd({ ...p, img_web: p.img_web || '', descripcion: p.descripcion || '', etiqueta: p.etiqueta || '' }); };
