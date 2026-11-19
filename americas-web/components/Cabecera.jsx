@@ -39,7 +39,7 @@ export default function Cabecera({ direccion }) {
   // el buscador del celu y las pestañas se van con el scroll.
   return (
     <>
-      <header>
+      <header className="tema-oscuro">
         <div className="wrap">
           <div className="hbar">
             <Link className="logo" href="/" aria-label="Inicio"><Logo /></Link>

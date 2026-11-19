@@ -20,9 +20,9 @@ export const CONFIG_DEF = {
   descPago: 'Efectivo 10%, Transferencia 10%',
   alias: '',
   sinStock: 'encargar',            // encargar | ocultar | ignorar
-  destacado: 'Todo lo que buscás, a un mensaje.',
-  bajada: 'Golosinas, bebidas, dietética, despensa y mucho más. Armá tu pedido y lo recibís en casa o lo retirás en el local.',
-  servicios: 'Rapipago, Cargas virtuales (celular y SUBE), Envíos en Paraná',
+  destacado: 'De todo, para todos.',
+  bajada: 'Dietética, despensa, kiosco, bebidas y golosinas. Armá tu pedido en 2 minutos y retiralo en el local o recibilo en tu casa. Cerca tuyo, siempre.',
+  servicios: 'Rapipago, Pago de servicios e impuestos, Cargas virtuales (celular y SUBE), Envíos en Paraná',
   nosotros: 'Somos un drugstore de barrio en Paraná: kiosco, bebidas, dietética y despensa, abierto hasta tarde. Pedí por acá y te lo preparamos al toque.',
   instagram: '',
   ruleta: true,

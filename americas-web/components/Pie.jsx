@@ -10,7 +10,7 @@ export default function Pie({ c }) {
   if (pathname.startsWith('/admin')) return null;
   const wa = cfg.whatsapp ? 'https://wa.me/' + cfg.whatsapp : '';
   return (
-    <footer>
+    <footer className="tema-oscuro">
       <div className="wrap">
         <div><Logo alto={40} /><p style={{ maxWidth: 380 }}>{c.nosotros}</p></div>
         <div><b>Tienda</b><Link href="/productos">Productos</Link><Link href="/ofertas">Ofertas</Link><Link href="/mis-pedidos">Mis pedidos</Link>{cfg.ruleta && <a onClick={abrirRuleta}>Ruleta de premios</a>}<Link href="/nosotros">Nosotros</Link></div>

@@ -21,7 +21,7 @@ export default function Panel() {
   if (!log) return <Login onOk={() => setLog(true)} />;
   const T = [['pedidos', 'receipt', 'Pedidos'], ['estadisticas', 'grid', 'Estadísticas'], ['productos', 'bag', 'Productos'], ['vendedores', 'gift', 'Revende'], ['ruleta', 'wheel', 'Ruleta'], ['avisos', 'bell', 'Avisos'], ['config', 'shop', 'Ajustes']];
   return (<div className="adm">
-    <div className="admtop"><a href="/" target="_blank" rel="noopener"><Logo alto={34} /></a><span className="kicker" style={{ marginLeft: 6 }}>Panel</span>
+    <div className="admtop tema-oscuro"><a href="/" target="_blank" rel="noopener"><Logo alto={34} /></a><span className="kicker" style={{ marginLeft: 6 }}>Panel</span>
       <button className="btn o" style={{ marginLeft: 'auto', padding: '9px 13px' }} onClick={async () => { await A('logout'); setLog(false); }}>Salir</button></div>
     <nav className="tabs">{T.map(([k, i, t]) => <button key={k} className={'tab' + (tab === k ? ' on' : '')} onClick={() => setTab(k)} style={{ position: 'relative' }}><Ic n={i} />{t}{k === 'pedidos' && nuevos > 0 && <b className="nb">{nuevos}</b>}</button>)}</nav>
     {tab === 'pedidos' && <Pedidos avisar={avisar} setNuevos={setNuevos} />}

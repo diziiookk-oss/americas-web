@@ -35,14 +35,8 @@ export function iniciales(n) { return String(n).split(/\s+/).filter((w) => /[a-z
 
 export const ESTRELLA = 'M24 2l6.6 15.2 16.5 1.4-12.5 10.9 3.8 16.2L24 37.1 9.6 45.7l3.8-16.2L.9 18.6l16.5-1.4z';
 
+// Logo real del negocio (PNG con fondo transparente, pensado para ir sobre negro).
 export function Logo({ alto = 46 }) {
-  return (
-    <svg viewBox="0 0 300 64" role="img" aria-label="Américas Drugstore" style={{ height: alto, width: 'auto', display: 'block' }}>
-      <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ff4a50" /><stop offset="1" stopColor="#c9161c" /></linearGradient></defs>
-      <path d={ESTRELLA} fill="url(#lg)" />
-      <text x="50" y="40" fontFamily="Montserrat, Arial Black, Arial, sans-serif" fontWeight="900" fontSize="41" fill="#fff" letterSpacing="-.5">AMERICAS</text>
-      <rect x="50" y="51" width="34" height="3" rx="1.5" fill="#e3242b" /><rect x="262" y="51" width="34" height="3" rx="1.5" fill="#e3242b" />
-      <text x="173" y="58" textAnchor="middle" fontFamily="Montserrat, Arial Black, Arial, sans-serif" fontWeight="800" fontSize="13" fill="#fff" letterSpacing="7.2">DRUGSTORE</text>
-    </svg>
-  );
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/logo.png" alt="Américas Drugstore" width={Math.round(alto * 2.775)} height={alto} style={{ height: alto, width: 'auto', display: 'block' }} />;
 }

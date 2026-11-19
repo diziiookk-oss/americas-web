@@ -130,7 +130,7 @@ export function TiendaProvider({ cfg, premios, sugeridos = [], children }) {
         {hoja.tipo === 'carrito' && <Carrito onListo={(r) => setHoja({ tipo: 'listo', r })} />}
         {hoja.tipo === 'avisame' && <Avisame p={hoja.p} />}
         {hoja.tipo === 'listo' && <PedidoListo r={hoja.r} />}</>}</div>
-      <div className={'modal' + (modal ? ' on' : '')}><div className="box">{modal === 'ruleta' && <Ruleta />}{modal === 'premio' && <VerPremio />}</div></div>
+      <div className={'modal' + (modal ? ' on' : '')}><div className="box tema-oscuro">{modal === 'ruleta' && <Ruleta />}{modal === 'premio' && <VerPremio />}</div></div>
       {toastS && <div key={toastS.k} className={'toast on' + (toastS.mal ? ' bad' : '')}>{toastS.t}</div>}
     </Ctx.Provider>
   );

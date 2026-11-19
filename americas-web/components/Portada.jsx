@@ -22,7 +22,7 @@ export default function Portada({ slides }) {
     : /^https?:/.test(b.href) ? <a key={k} className={'btn ' + (b.o ? 'o' : 'r')} href={b.href} target="_blank" rel="noopener" onClick={() => ev('whatsapp', 'portada')}><Ic n="wa" cl="s" /> {b.t}</a>
       : <Link key={k} className={'btn ' + (b.o ? 'o' : 'r')} href={b.href}>{b.t}{!b.o && <Ic n="arrow" cl="s" />}</Link>;
   return (
-    <section className="hero" aria-label="Destacados">
+    <section className="hero tema-oscuro" aria-label="Destacados">
       <div className="slides" style={{ transform: `translateX(${-100 * i}%)` }}
         onTouchStart={(e) => { x0.current = e.touches[0].clientX; pausa.current = true; }}
         onTouchEnd={(e) => { if (x0.current === null) return; const dx = e.changedTouches[0].clientX - x0.current; if (Math.abs(dx) > 40) setI((v) => (v + (dx < 0 ? 1 : -1) + n) % n); x0.current = null; }}>
