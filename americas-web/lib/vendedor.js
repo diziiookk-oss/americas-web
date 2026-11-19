@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { db } from './db';
 import { getConfig } from './datos';
 import { codigoDe } from './admin';
+import { VERSION_TERMINOS } from './legal';
 
 const ult10 = (t) => String(t || '').replace(/\D/g, '').slice(-10);
 function hash(clave, sal) { sal = sal || crypto.randomBytes(16).toString('hex'); return sal + ':' + crypto.scryptSync(String(clave), sal, 32).toString('hex'); }
@@ -26,23 +27,25 @@ async function buscarPorTel(s, tel) {
   return rows[0] || null;
 }
 
-export async function registrar({ nombre, telefono, clave, alias, nota }) {
+export async function registrar({ nombre, telefono, clave, alias, nota, acepta }) {
   const n = String(nombre || '').trim().replace(/\s+/g, ' ').slice(0, 60);
   const tel = String(telefono || '').replace(/\D/g, '').slice(0, 15);
   if (n.length < 3) return { ok: false, msg: 'Escribí tu nombre y apellido.' };
   if (ult10(tel).length < 10) return { ok: false, msg: 'Escribí tu WhatsApp con característica (ej. 343 4123456).' };
   if (String(clave || '').length < 6) return { ok: false, msg: 'La contraseña tiene que tener al menos 6 letras o números.' };
+  if (acepta !== true) return { ok: false, msg: 'Para crear la cuenta tenés que aceptar los Términos del programa y la Política de privacidad.' };
+  const terminos = VERSION_TERMINOS + ' aceptados el ' + new Date().toISOString();
   const s = await db();
   const ya = await buscarPorTel(s, tel);
   if (ya && ya.clave) return { ok: false, msg: 'Ese WhatsApp ya tiene cuenta. Entrá con tu contraseña.' };
   if (ya) {   // el dueño ya lo había cargado a mano: se le crea el acceso y conserva su estado
-    await s`UPDATE vendedores SET clave = ${hash(clave)}, alias = ${String(alias || '').slice(0, 60)}, nota = ${String(nota || '').slice(0, 300)} WHERE codigo = ${ya.codigo}`;
+    await s`UPDATE vendedores SET clave = ${hash(clave)}, terminos = ${terminos}, alias = ${String(alias || '').slice(0, 60)}, nota = ${String(nota || '').slice(0, 300)} WHERE codigo = ${ya.codigo}`;
     return { ok: true, estado: ya.estado || 'activo', msg: ya.activo ? '¡Listo! Ya podés entrar.' : 'Cuenta creada. Te avisamos cuando esté aprobada.' };
   }
   const base = codigoDe(n.split(' ')[0]) || 'rev';
   let c = base, k = 2;
   while ((await s`SELECT 1 FROM vendedores WHERE codigo = ${c}`).length) c = base + k++;
-  await s`INSERT INTO vendedores (codigo, nombre, telefono, activo, estado, clave, alias, nota) VALUES (${c}, ${n}, ${tel}, false, 'pendiente', ${hash(clave)}, ${String(alias || '').slice(0, 60)}, ${String(nota || '').slice(0, 300)})`;
+  await s`INSERT INTO vendedores (codigo, nombre, telefono, activo, estado, clave, alias, nota, terminos) VALUES (${c}, ${n}, ${tel}, false, 'pendiente', ${hash(clave)}, ${String(alias || '').slice(0, 60)}, ${String(nota || '').slice(0, 300)}, ${terminos})`;
   return { ok: true, estado: 'pendiente', msg: '¡Listo! Tu cuenta quedó pendiente de aprobación. Te avisamos por WhatsApp.' };
 }
 

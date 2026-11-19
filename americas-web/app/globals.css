@@ -603,3 +603,16 @@
   .cui b { display: block; font-weight: 700; font-size: 14.5px; } .cui small { display: block; color: var(--mute); font-size: 12.5px; line-height: 1.3; }
   .cuic { width: 38px; height: 38px; border-radius: 12px; background: #f5f0e8; display: grid; place-items: center; font-size: 18px; flex: none; }
   @media (max-width: 599px) { .hbtns .rb { width: 40px; height: 40px; } }
+  /* páginas legales y explicación de revendedores */
+  .legal { max-width: 760px; margin: 0 auto; padding: 18px 0 10px; }
+  .legal h1 { font-weight: 800; letter-spacing: -.03em; font-size: 30px; line-height: 1.1; margin: 8px 0 6px; }
+  .legal h2 { font-weight: 800; letter-spacing: -.02em; font-size: 19px; margin: 26px 0 8px; }
+  .legal p, .legal li { color: var(--txt2); font-size: 15px; line-height: 1.6; }
+  .legal ul { padding-left: 20px; margin: 6px 0; } .legal li { margin: 4px 0; }
+  .explica { display: grid; gap: 10px; } @media (min-width: 800px) { .explica { grid-template-columns: 1fr 1fr; } }
+  .explica div { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+  .explica b { display: block; font-weight: 800; letter-spacing: -.015em; margin-bottom: 4px; } .explica span { color: var(--txt2); font-size: 14px; }
+  .faq details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 13px 16px; margin-bottom: 8px; }
+  .faq summary { cursor: pointer; font-weight: 700; letter-spacing: -.01em; list-style: none; } .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; float: right; color: var(--red); font-weight: 800; } .faq details[open] summary::after { content: '−'; }
+  .faq p { margin: 8px 0 0; color: var(--txt2); font-size: 14px; }

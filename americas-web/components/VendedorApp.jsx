@@ -19,7 +19,7 @@ export default function VendedorApp({ pct }) {
 }
 
 function Entrada({ pct, onEntro }) {
-  const [modo, setModo] = useState('crear'), [f, setF] = useState({ nombre: '', telefono: '', clave: '', alias: '', nota: '' }), [msg, setMsg] = useState(null), [env, setEnv] = useState(false);
+  const [modo, setModo] = useState('crear'), [f, setF] = useState({ nombre: '', telefono: '', clave: '', alias: '', nota: '', acepta: false }), [msg, setMsg] = useState(null), [env, setEnv] = useState(false);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   async function enviar(e) {
     e.preventDefault(); setEnv(true); setMsg(null);
@@ -49,11 +49,36 @@ function Entrada({ pct, onEntro }) {
         {modo === 'crear' && <>
           <label className="campo">Alias o CBU para pagarte (opcional, lo podés cargar después)</label><input className="inp" value={f.alias} onChange={(e) => set('alias', e.target.value)} placeholder="ej. pedro.gomez.mp" />
           <label className="campo">¿Cómo pensás vender? (opcional)</label><textarea className="inp" rows={2} value={f.nota} onChange={(e) => set('nota', e.target.value)} placeholder="Ej. a mis compañeros de trabajo, en el grupo del barrio…" />
+          <label className="chk" style={{ alignItems: 'flex-start' }}><input type="checkbox" checked={f.acepta} onChange={(e) => set('acepta', e.target.checked)} style={{ marginTop: 2 }} />
+            <span>Soy mayor de 18 años y acepto los <a href="/revendedores/terminos" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>Términos del Programa de Revendedores</a> y la <a href="/privacidad" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>Política de privacidad</a>.</span></label>
         </>}
         {msg && <div className={'aviso' + (msg.ok ? ' ok' : '')}>{msg.t}</div>}
-        <button className="btn r blk" style={{ marginTop: 14 }} disabled={env}>{env ? 'Un momento…' : modo === 'crear' ? 'Crear mi cuenta' : 'Entrar'}</button>
+        <button className="btn r blk" style={{ marginTop: 14 }} disabled={env || (modo === 'crear' && !f.acepta)}>{env ? 'Un momento…' : modo === 'crear' ? 'Crear mi cuenta' : 'Entrar'}</button>
       </form>
     </div>
+
+    <div className="sec"><h3>Cómo funciona, paso a paso</h3></div>
+    <div className="explica">
+      <div><b>🔗 Tu link personal</b><span>Cuando te aprobamos, en tu panel aparece un link único (por ejemplo, americas…/?ref=tunombre). Lo compartís por WhatsApp, estados, Instagram o grupos.</span></div>
+      <div><b>🛒 La gente compra</b><span>Quien entra por tu link y hace un pedido dentro de los 30 días queda asociado a vos, aunque compre otro día. Nosotros preparamos, cobramos y entregamos.</span></div>
+      <div><b>💵 Vos ganás</b><span>Te llevás el {pct}% de la ganancia de cada pedido entregado. Por ejemplo: si un pedido nos deja $10.000 de ganancia, a vos te tocan ${(10000 * pct / 100).toLocaleString('es-AR')}.</span></div>
+      <div><b>📅 Cobrás cada semana</b><span>Te transferimos todas las semanas a tu alias o CBU. En tu panel ves en todo momento lo que vendiste y lo que tenés para cobrar.</span></div>
+    </div>
+
+    <div className="sec"><h3>Preguntas frecuentes</h3></div>
+    <div className="faq">
+      {[
+        ['¿Tengo que invertir plata o comprar mercadería?', 'No. No comprás nada, no tenés stock y no cobrás a nadie. Solo compartís tu link.'],
+        ['¿Por qué la comisión es sobre la ganancia y no sobre el precio?', 'Porque en un almacén cada producto deja un margen distinto (una gaseosa deja poco, un fruto seco deja más). Así el programa es sostenible y te podemos pagar siempre, sin que ningún pedido dé pérdida.'],
+        ['¿Qué pasa si el cliente cancela o no retira el pedido?', 'Solo cuentan los pedidos entregados y cobrados. Si un pedido se cancela, no genera comisión.'],
+        ['¿Puedo comprar yo con mi propio link?', 'Podés comprar, pero tus propias compras no generan comisión.'],
+        ['¿Ven mis clientes mis datos, o yo los de ellos?', 'No. Vos solo ves el nombre de pila y el estado de cada pedido. Los datos de contacto de los clientes no se comparten.'],
+        ['¿Tengo que facturar?', 'Cada revendedor es responsable de sus impuestos. Si vas a cobrar seguido, consultá con un contador si te conviene el monotributo.'],
+        ['¿Puedo hacer publicidad paga?', 'Compartir tu link en tus redes, sí. Hacer anuncios pagos con el nombre o el logo de Américas Drugstore, solo con nuestra autorización por escrito.'],
+        ['¿Me puedo dar de baja?', 'Cuando quieras, avisándonos por WhatsApp. Te pagamos lo que ya tengas generado.']
+      ].map(([p, r]) => <details key={p}><summary>{p}</summary><p>{r}</p></details>)}
+    </div>
+    <p className="muted" style={{ marginTop: 12 }}>Leé los <a href="/revendedores/terminos" style={{ textDecoration: 'underline' }}>Términos completos del programa</a> y nuestra <a href="/privacidad" style={{ textDecoration: 'underline' }}>Política de privacidad</a>.</p>
   </div>);
 }
 

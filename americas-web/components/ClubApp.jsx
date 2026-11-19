@@ -54,7 +54,8 @@ export default function ClubApp() {
         <label className="campo">Tu cumpleaños (opcional, día/mes) 🎂</label><input className="inp" placeholder="Ej. 17/09" value={f.cumple} onChange={(x) => set('cumple', x.target.value)} />
         <label className="chk"><input type="checkbox" checked={f.acepta} onChange={(x) => set('acepta', x.target.checked)} /> Quiero recibir ofertas por WhatsApp (pocas, prometido)</label>
         {msg && <div className={'aviso' + (msg.ok ? ' ok' : '')}>{msg.t}</div>}
-        <button className="btn r blk" style={{ marginTop: 14 }} disabled={env}>{env ? 'Un momento…' : 'Sumarme al Club'}</button>
+        <div className="muted" style={{ marginTop: 10, fontSize: 12.5 }}>Al sumarte aceptás nuestra <a href="/privacidad" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>Política de privacidad</a>. Podés pedir la baja cuando quieras.</div>
+        <button className="btn r blk" style={{ marginTop: 12 }} disabled={env}>{env ? 'Un momento…' : 'Sumarme al Club'}</button>
       </form>
       <YaSoy onOk={(tel, est) => { guardar({ tel }); setE(est); }} />
     </div>)}
